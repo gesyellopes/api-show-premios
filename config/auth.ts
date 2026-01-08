@@ -9,7 +9,6 @@ const authConfig = defineConfig({
       provider: tokensUserProvider({
         tokens: 'accessTokens',
         model: () => import('#models/user'),
-        uids: ['whatsapp']
       }),
     }),
   },
