@@ -16,4 +16,4 @@ ENV PORT=3333
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/build ./build
-CMD ["node", "build/server.js"]
+CMD ["node", "build/bin/server.js"]
