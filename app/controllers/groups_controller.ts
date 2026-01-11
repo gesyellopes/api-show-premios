@@ -62,4 +62,9 @@ export default class GroupsController {
     await group.delete()
     return response.noContent()
   }
+
+  async byUnit({ params }: HttpContext) {
+    return Group.query().select('id', 'name').where('unit_id', params.id).orderBy('id', 'desc')
+  }
+
 }

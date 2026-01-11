@@ -22,7 +22,6 @@ import ReportsController from '#controllers/reports_controller'
 
 router.group(() => {
 
-
   router.resource('tenants', TenantsController).apiOnly()
   router.resource('users', UsersController).apiOnly()
   router.resource('tickets', TicketsController).apiOnly()
@@ -30,11 +29,8 @@ router.group(() => {
   //Unit
   router.get('units/list', [UnitsController, 'unitsList']);
   router.resource('units', UnitsController).apiOnly()
-
-  router.resource('groups', GroupsController).apiOnly()
   router.resource('whatsapp-allowed-numbers', WhatsappAllowedNumbersController).apiOnly()
-  router.resource('vendors', VendorsController).apiOnly()
-
+  
   router.get('validate/:ticket_number', [TicketsController, 'checkValidation'])
   router.post('validate', [TicketsController, 'validateByBody'])
 
@@ -46,6 +42,20 @@ router.group(() => {
   router.get('report/validationReport', [ReportsController, 'validationReport']);
   router.get('report/financialReport', [ReportsController, 'financialReport']);
 
+  //Update Vendors ranges
+  router.post('vendors/:id/update-range', [VendorsController, 'updateRange']);
+  //Obter range do vendedor
+  router.get('vendors/:id/range', [VendorsController, 'getRange']);
+
+  //Vendor general
+  router.resource('vendors', VendorsController).apiOnly()
+
+  //GROUPS
+  router.get('groups/by-unit/:id', [GroupsController, 'byUnit']);
+
+
+  //groups-geral
+  router.resource('groups', GroupsController).apiOnly()
   
   //router.post('auth/login', [AuthController, 'login'])
 

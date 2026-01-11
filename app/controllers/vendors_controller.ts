@@ -16,7 +16,44 @@ export default class VendorsController {
         const page = request.input('page', 1)
         const limit = request.input('limit', 20)
 
-        const vendors = await User.query().select(['id', 'name', 'whatsapp']).where('role', 'vendor').orderBy('id', 'desc').paginate(page, limit);
+        const vendorName = request.input('vendor_name')
+        let vendorWhatsapp = request.input('vendor_whatsapp')
+        const unitIdSearch = request.input('unit_id_search')
+        const groupIdSearch = request.input('group_id_search')
+
+        const query = User.query()
+            .select(['id', 'name', 'whatsapp'])
+            .where('role', 'vendor')
+
+        if (vendorName) {
+            query.where('name', 'like', `%${vendorName}%`)
+        }
+        if (vendorWhatsapp) {
+            vendorWhatsapp = '55' + vendorWhatsapp.replace(/\D/g, '');
+            query.where('whatsapp', vendorWhatsapp)
+        }
+
+        if (groupIdSearch || unitIdSearch) {
+            const groupQuery = Group.query().select('manager_id')
+            if (groupIdSearch) {
+                groupQuery.where('id', groupIdSearch)
+            }
+            if (unitIdSearch) {
+                groupQuery.where('unit_id', unitIdSearch)
+            }
+            const groups = await groupQuery
+            const managerIds = groups
+                .map((group) => group.managerId)
+                .filter((id): id is number => Boolean(id))
+
+            if (managerIds.length > 0) {
+                query.whereIn('id', managerIds)
+            } else {
+                query.whereRaw('1 = 0')
+            }
+        }
+
+        const vendors = await query.orderBy('id', 'desc').paginate(page, limit);
 
         const rows = vendors.all();
         const data = [];
@@ -183,6 +220,130 @@ Segue abaixo as instruções de como enviar os canhotos. Qualquer dúvida é só
 
         }
         
+    }
+
+
+    //Atualizar range vendedor
+    async updateRange({ params, request }: HttpContext) {
+
+        const payload = request.only([
+            'ticket_from',
+            'ticket_to',
+            'group_id'
+        ]);
+
+        try {
+
+            await TicketsService.bulkEdit({
+                event: 1,
+                from: payload.ticket_from,
+                to: payload.ticket_to,
+                vendorId: params.id,
+                groupId: payload.group_id
+            });
+
+            return { success: true, message: 'Range de cartelas atualizado com sucesso.' };
+
+        } catch (error) {
+
+            return { success: false, message: 'Erro ao atualizar o range de cartelas. Contate o suporte.', error: error.message };
+
+        }
+
+    }
+
+    //Obter range vendedor
+    async getRange({ params }: HttpContext) {
+
+        try {
+
+            const tickets = await Ticket.query()
+                .select(['ticket_number', 'group_id'])
+                .where('vendor_id', params.id);
+
+            if (tickets.length === 0) {
+                return {
+                    success: true,
+                    data: {
+                        ranges: [],
+                    },
+                };
+            }
+
+            const ticketsByGroup = new Map<number | null, Array<{ ticketNumber: string; numeric: number }>>()
+            for (const ticket of tickets) {
+                const groupId = ticket.groupId ?? null
+                const list = ticketsByGroup.get(groupId) ?? []
+                list.push({
+                    ticketNumber: ticket.ticketNumber,
+                    numeric: Number(ticket.ticketNumber),
+                })
+                ticketsByGroup.set(groupId, list)
+            }
+
+            const groups: Array<{
+                group_id: number | null
+                ranges: Array<{ ticket_from: string; ticket_to: string }>
+            }> = []
+
+            for (const [groupId, list] of ticketsByGroup) {
+                const sorted = list.sort((a, b) => a.numeric - b.numeric)
+                const ranges: Array<{ ticket_from: string; ticket_to: string }> = []
+                let current: { from: string; to: string; last: number } | null = null
+
+                for (const ticket of sorted) {
+                    if (!current) {
+                        current = {
+                            from: ticket.ticketNumber,
+                            to: ticket.ticketNumber,
+                            last: ticket.numeric,
+                        }
+                        continue
+                    }
+
+                    const isConsecutive = ticket.numeric === current.last + 1
+                    if (isConsecutive) {
+                        current.to = ticket.ticketNumber
+                        current.last = ticket.numeric
+                    } else {
+                        ranges.push({
+                            ticket_from: current.from,
+                            ticket_to: current.to,
+                        })
+                        current = {
+                            from: ticket.ticketNumber,
+                            to: ticket.ticketNumber,
+                            last: ticket.numeric,
+                        }
+                    }
+                }
+
+                if (current) {
+                    ranges.push({
+                        ticket_from: current.from,
+                        ticket_to: current.to,
+                    })
+                }
+
+                groups.push({
+                    group_id: groupId,
+                    ranges,
+                })
+            }
+
+            return {
+                success: true,
+                data: {
+                    groups,
+                },
+            };
+
+        } catch (error) {
+
+            return { success: false, message: 'Erro ao obter o range de cartelas. Contate o suporte.', error: error.message };
+
+        }
+
     }
 
 }
