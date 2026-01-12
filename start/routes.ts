@@ -20,6 +20,8 @@ import WhatsappAllowedNumbersController from '#controllers/whatsapp_allowed_numb
 import VendorsController from '#controllers/vendors_controller';
 import ReportsController from '#controllers/reports_controller'
 
+import NotificationsController from '#controllers/notifications_controller'
+
 router.group(() => {
 
   router.resource('tenants', TenantsController).apiOnly()
@@ -43,7 +45,7 @@ router.group(() => {
   router.get('report/financialReport', [ReportsController, 'financialReport']);
 
   //Update Vendors ranges
-  router.post('vendors/:id/update-range', [VendorsController, 'updateRange']);
+  router.post('vendors/update-range/:id/', [VendorsController, 'updateRange']);
   //Obter range do vendedor
   router.get('vendors/:id/range', [VendorsController, 'getRange']);
 
@@ -62,6 +64,9 @@ router.group(() => {
   //router.get('auth/me', [AuthController, 'me']).use('auth:api')
 
   //router.post('auth/logout', [AuthController, 'logout']).use('auth:api')
+
+  //Notifications
+  router.get('notifications/request-ticket-registration/:id', [NotificationsController, 'requestTicketRegistration']);
   
 
 
