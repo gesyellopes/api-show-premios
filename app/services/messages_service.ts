@@ -12,6 +12,14 @@ type SendTextParams = {
     delayMessage?: number
 }
 
+type SendOTPParams = {
+    phone: string
+    message: string
+    code: string
+    messageId?: string
+    delayMessage?: number
+}
+
 type DownloadMediaParams = {
     mediaKey: string
     directPath: string
@@ -111,6 +119,26 @@ export default class WapiService {
         }
 
         return this.requestWapi(`/send-text?instanceId=${encodeURIComponent(this.INSTANCE_ID)}`, {
+            method: 'POST',
+            body,
+        })
+    }
+
+    // ✅ Enviar OTP
+    static async sendWhatsappOTP({ phone, message, messageId, code, delayMessage = 5 }: SendOTPParams) {
+        if (!phone) throw new Error('phone é obrigatório')
+        if (!message) throw new Error('message é obrigatório')
+
+        const body = {
+            phone,
+            message,
+            buttonText: 'Copiar código',
+            code,
+            delayMessage,
+            ...(messageId ? { messageId } : {}),
+        }
+
+        return this.requestWapi(`/send-button-otp?instanceId=${encodeURIComponent(this.INSTANCE_ID)}`, {
             method: 'POST',
             body,
         })

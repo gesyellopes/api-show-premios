@@ -22,6 +22,12 @@ type VendorUpdatedRange = {
 }
 
 
+type OtpResetPassword = {
+  whatsapp: string
+  code: string,
+  purpose?: string,
+}
+
 
 type requestTicketRegistration = {
   vendorId: number
@@ -111,6 +117,31 @@ ${groupsText}`
     })
 
     return { success: true }
+  }
+
+  //Código OTP para reset de senha
+  static async sendOtpResetPassword(input: OtpResetPassword) {
+
+    let message = '';
+
+    if (input.purpose === 'password_reset') {
+      message = `Seu código para alterar sua senha no sistema é: *${input.code}*`;
+    } else {
+      message = `Seu código é: *${input.code}*`;
+    }
+
+    try {
+      await WapiService.sendWhatsappOTP({
+        phone: input.whatsapp,
+        message,
+        code: input.code
+      });
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: 'Erro ao enviar código OTP. Verifique o número de WhatsApp.', error: error.message };
+    }
+
   }
 
 

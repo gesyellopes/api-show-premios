@@ -4,7 +4,6 @@ import VendorStatsService from '#services/vendor_stats_service';
 import NotificationService from '#services/notifications_service';
 //import GroupService from '#services/group_service'
 import type { HttpContext } from '@adonisjs/core/http'
-import Hash from '@adonisjs/core/services/hash';
 import Ticket from '#models/ticket';
 
 export default class VendorsController {
@@ -41,7 +40,7 @@ export default class VendorsController {
 
         payload.vendor_whatsapp = '55' + payload.vendor_whatsapp.replace(/\D/g, '')
 
-        const userPass = await Hash.make('123456')
+        const userPass = '123456' //Senha padrão
 
         const vendor = {
             name: payload.vendor_name,

@@ -2,6 +2,11 @@
   "extends": "@adonisjs/tsconfig/tsconfig.app.json",
   "compilerOptions": {
     "rootDir": "./",
-    "outDir": "./build"
+    "outDir": "./build",
+    "types": [
+      "@adonisjs/core",
+      "@adonisjs/auth",
+      "@adonisjs/bouncer" // <--- ESSA LINHA PRECISA ESTAR AQUI
+    ]
   }
 }
