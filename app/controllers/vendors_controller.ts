@@ -202,4 +202,11 @@ export default class VendorsController {
 
     }
 
+    //Tickets desse venededor
+    async tickets({ params }: HttpContext) {
+
+        return VendorStatsService.listTicketsOfVendor(params.id)
+
+    }
+
 }

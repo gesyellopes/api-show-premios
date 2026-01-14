@@ -56,6 +56,11 @@ router.group(() => {
 
   //Update Vendors ranges
   router.post('vendors/update-range/:id/', [VendorsController, 'updateRange']);
+
+
+  //Tickets desse vendor
+  router.get('vendors/:id/tickets', [VendorsController, 'tickets']);
+
   //Obter range do vendedor
   router.get('vendors/:id/range', [VendorsController, 'getRange']);
 

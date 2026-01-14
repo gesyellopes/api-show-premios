@@ -395,4 +395,30 @@ export default class VendorRangeService {
       }
     }
   }
+
+  //Tickets de um vendedor
+  static async listTicketsOfVendor(vendorId: number): Promise<any[]> {
+    const tickets = await Ticket.query()
+      .where('vendor_id', vendorId)
+      .orderBy('ticket_number', 'asc')
+
+    let allTickets = [];
+
+    for(const ticket of tickets){
+
+      let ticketData = {
+        id: ticket.id,
+        ticket_number: ticket.ticketNumber,
+        validated: ticket.validated,
+        delivered_on: ticket.deliveredOn,
+        paid: 0
+      }
+
+      allTickets.push(ticketData);
+
+    }
+
+    return allTickets
+
+  }
 }
