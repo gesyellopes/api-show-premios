@@ -2,6 +2,7 @@ import db from '@adonisjs/lucid/services/db'
 import Ticket from '#models/ticket'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
+import TicketsService from '#services/tickets_service'
 
 function padLeft(n: number, width: number) {
   return String(n).padStart(width, '0')
@@ -29,6 +30,24 @@ function parseRange(from: string, to: string) {
 
 export default class TicketsController {
   async index({ request }: HttpContext) {
+
+
+    const payload = {
+      page: request.input('page', 1),
+      limit: request.input('limit', 50),
+      unitId: request.input('unit_id'),
+      groupId: request.input('group_id'),
+      vendorName: request.input('vendor_name'),
+      vendorWhatsapp: request.input('vendor_whatsapp'),
+      validated: request.input('validated'),
+      ticketNumber: request.input('ticket_number')
+    }
+
+    return TicketsService.getTickets(payload);
+
+
+    /*
+
     const page = request.input('page', 1)
     const limit = request.input('limit', 20)
 
@@ -59,7 +78,15 @@ export default class TicketsController {
       query.where('validated', v ? 1 : 0)
     }
 
-    return query.orderBy('id', 'desc').paginate(page, limit)
+    const tickets = await query.orderBy('ticket_number', 'asc').paginate(page, limit);
+
+    return {
+      meta: tickets.getMeta
+    };
+
+    //return query.orderBy('ticket_number', 'asc').paginate(page, limit)
+
+    */
   }
 
   public async checkValidation({ params, response }: HttpContext) {

@@ -1,5 +1,9 @@
 // app/services/tickets_service.ts
+import Ticket from '#models/ticket'
 import db from '@adonisjs/lucid/services/db'
+import Group from '#models/group'
+import Unit from '#models/unit'
+import User from '#models/user'
 import { DateTime } from 'luxon'
 
 type BulkEditParams = {
@@ -18,6 +22,18 @@ type BulkEditResult = {
   from: string
   to: string
   patched_fields: string[]
+}
+
+type getTickets = {
+  page?: number
+  limit?: number
+  ticketNumber?: string
+  unitId?: number
+  groupId?: number
+  vendorName?: string
+  vendorWhatsapp?: string
+  validated?: number
+  paid?: number
 }
 
 export default class TicketsService {
@@ -122,4 +138,78 @@ export default class TicketsService {
       patched_fields: Object.keys(patch),
     }
   }
+
+
+  //Função de busca
+  static async getTickets(input: getTickets){
+
+    const page = input.page ?? 1
+    const limit = input.limit ?? 50
+
+    const unitId = input.unitId ?? null
+    const groupId = input.groupId ?? null
+    const vendorName = input.vendorName ?? null
+    const vendorWhatsapp = input.vendorWhatsapp ?? null
+    const validated = Number(input.validated) ?? null
+    const ticketNumber = input.ticketNumber ?? null
+
+    //const paid = input.paid ?? null
+
+    const query = Ticket.query()
+
+    if(vendorName || vendorWhatsapp){
+      //Preciso buscar os IDs dos vendors que batem com o filtro
+      const vendorQuery = User.query()
+      if(vendorName) vendorQuery.where('name', 'like', `%${vendorName}%`)
+      if(vendorWhatsapp) vendorQuery.where('whatsapp', 'like', `%${vendorWhatsapp}%`)
+      const vendors = await vendorQuery.select('id')
+
+      const vendorIds = vendors.map(v => v.id)
+      query.whereIn('vendor_id', vendorIds)
+    }
+
+    if(unitId) query.where('unit_id', unitId)
+    if(groupId) query.where('group_id', groupId)
+    if(validated !== null){
+      if(validated === 1) query.where('validated', true)
+      else if(validated === 0) query.where('validated', false)
+    }
+    if(ticketNumber) query.where('ticket_number', ticketNumber)
+
+    const tickets = await query.orderBy('ticket_number', 'asc').paginate(page, limit);
+
+    const data: any[] = []
+    
+    //loop nos tickets
+    for(const ticket of tickets){
+
+      const unit = ticket.unitId ? await Unit.find(ticket.unitId) : null
+      const group = ticket.groupId ? await Group.find(ticket.groupId) : null
+      const vendor = ticket.vendorId ? await User.find(ticket.vendorId) : null
+
+      const ticketData = {
+        id: ticket.id,
+        ticketNumber: ticket.ticketNumber,
+        unit: unit ? { id: unit.id, name: unit.name } : null,
+        group: group ? { id: group.id, name: group.name } : null,
+        vendor: vendor ? { id: vendor.id, name: vendor.name, whatsapp: vendor.whatsapp } : null,
+        deliveredOn: ticket.deliveredOn,
+        validated: ticket.validated,
+        validatedOn: ticket.validatedOn,
+        mirror: ticket.ticketMirror,
+        paid: 0 //campo reservado pro futuro
+      }
+
+      data.push(ticketData)
+    }
+
+    return {
+      meta: tickets.getMeta(),
+      data: data
+    }
+
+  }
+
+
+
 }
