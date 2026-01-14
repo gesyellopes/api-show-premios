@@ -7,8 +7,6 @@
 | or the router.
 |
 */
-
-import { Bouncer } from '@adonisjs/bouncer'
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
 
