@@ -38,6 +38,8 @@ import { middleware } from '#start/kernel'
  * ============================================================================
  */
 import { testQueue } from './queues/queue_test.js'
+import RafflesController from '#controllers/raffles_controller'
+import RaffleRoundsController from '#controllers/raffle_rounds_controller'
 
 /**
  * ============================================================================
@@ -108,6 +110,7 @@ router
     router.get('validate/:ticket_number', [TicketsController, 'checkValidation'])
     router.post('validate', [TicketsController, 'validateByBody'])
 
+    router.post('tickets/return', [TicketsController, 'returnTickets'])
     router.post('tickets/bulk/create', [TicketsController, 'bulkCreate'])
     router.post('tickets/bulk/edit', [TicketsController, 'bulkEdit'])
 
@@ -131,6 +134,27 @@ router
       'notifications/request-ticket-registration/:id',
       [NotificationsController, 'requestTicketRegistration']
     )
+
+    /**
+     * ------------------------------------------------------------------------
+     * RAFFLES
+     * ------------------------------------------------------------------------
+     */
+    
+    
+    
+    router.resource('raffle/round', RaffleRoundsController).apiOnly()
+
+    //Call Number
+    router.post('raffle/round/call-number/', [RafflesController, 'callNumber'])
+    router.post('raffle/round/remove-call-number/', [RafflesController, 'removeCallNumber'])
+
+    //Start round
+    router.post('raffle/round/:id/start', [RaffleRoundsController, 'startRound'])
+    router.post('raffle/tickets/upload-csv', [TicketsController, 'uploadCsv'])
+    router.resource('raffle', RafflesController).apiOnly()
+
+
   })
   .prefix('/api/v1')
 

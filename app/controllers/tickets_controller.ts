@@ -3,6 +3,7 @@ import Ticket from '#models/ticket'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import TicketsService from '#services/tickets_service'
+import fs from 'node:fs/promises'
 
 function padLeft(n: number, width: number) {
   return String(n).padStart(width, '0')
@@ -399,4 +400,53 @@ export default class TicketsController {
       },
     }
   }
+
+
+  //Upload Tickets via CSV
+  public async uploadCsv({ request, response }: HttpContext) {
+    const csvFile = request.file('file', {
+      extnames: ['csv'],
+    })
+
+    if (!csvFile) {
+      return response.badRequest({ success: false, message: 'CSV file is required' })
+    }
+
+    //Lê o conteúdo do arquivo temporário
+    const csvData = await fs.readFile(csvFile.tmpPath!, 'utf-8')
+    const result = await TicketsService.uploadTicketsNumbersCsv(csvData)
+
+    return response.ok({ success: true, data: result })
+  }
+
+
+  //Devolução de Tickets (Ticket Returns)
+  public async returnTickets({ request, response }: HttpContext) {
+
+      const payload = {
+        tenant_id: 1,  //temporário, depois pegar do auth
+        event_id: 1, //temporário, depois pegar do body
+        unit_id: request.input('unit_id'),
+        ticket_from: request.input('ticket_from'),
+        ticket_to: request.input('ticket_to'),
+        reason: request.input('reason')
+      };
+
+      if (!payload.event_id || !payload.ticket_from || !payload.ticket_to || !payload.reason) {
+        return response.badRequest({
+          success: false,
+          message: 'event_id, ticket_from, ticket_to e reason são obrigatórios',
+        });
+      }
+
+      try {
+        const result = await TicketsService.returnTickets(payload);
+        return response.ok({ success: true, data: result });
+      } catch (e: any) {
+        return response.badRequest({ success: false, message: e.message });
+      }
+  
+  
+  }
+
 }
