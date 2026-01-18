@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import RaffleRound, { type RaffleRoundStatus } from '#models/raffle_round'
 import RoundService from '#services/round_service'
 
-const DEFAULT_TENANT_ID = 1 // por enquanto (não usado diretamente aqui)
+//const DEFAULT_TENANT_ID = 1 // por enquanto (não usado diretamente aqui)
 
 const ALLOWED_STATUS: RaffleRoundStatus[] = ['scheduled', 'running', 'closed', 'void']
 
@@ -162,6 +162,21 @@ export default class RaffleRoundsController {
     return { success: true, message: 'Round deleted successfully' }
   }
 
+  //Export CSV
+
+  async exportCsv({ params, response }: HttpContext) {
+    const roundId = Number(params.id);
+    if (!roundId) {
+      return response.badRequest({ success: false, message: 'Invalid round ID' });
+    }
+
+    const csvContent = await RoundService.exportRoundTicketsToCSV(roundId);
+
+    response.header('Content-Type', 'text/csv');
+    response.header('Content-Disposition', `attachment; filename=\"round_${roundId}.csv\"`);
+    return response.send(csvContent.data);
+  }
+
 
   //Round Start
 
@@ -179,6 +194,34 @@ export default class RaffleRoundsController {
 
     return { success: true, data: roundStart.data  }
     */
+
+  }
+
+  //Encerrar Round
+  async closeRound({ params }: HttpContext) {
+
+    const roundClose = await RoundService.closeRound({ roundId: Number(params.id) })
+
+    return roundClose;
+
+  }
+
+
+
+  //All rounds by raffle id
+  async roundsByRaffleId({ params }: HttpContext) {
+
+    const raffleId = Number(params.id);
+
+    if (!raffleId) {
+      return { success: false, message: 'Invalid raffle ID' }
+    }
+
+    const rounds = await RaffleRound.query()
+      .where('raffle_id', raffleId)
+      .orderBy('round_number', 'asc');
+
+    return { success: true, data: rounds };
 
   }
 

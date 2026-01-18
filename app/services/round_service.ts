@@ -2,6 +2,7 @@
 //import RaffleRoundTicket from "#models/raffle_round_ticket";
 import RaffleRound from "#models/raffle_round";
 import db from '@adonisjs/lucid/services/db';
+import { DateTime } from "luxon";
 
 type StartParams = {
     roundId: number
@@ -31,6 +32,67 @@ type checkTicketHitsParams = {
 
 export default class RoundService {
 
+    //Função para exportar os tickets de um round em um csv num padrão específico
+    static async exportRoundTicketsToCSV(roundId: number) {
+
+        //Busco na tabela raffle_round_tickets todos os tickets daquele round
+        //Ele tem uma coluna ticket_number que é o número da cartela
+        //O csv terá duas colunas ticket_number,unligible
+        //Em ticket number ele irá trazer todos os registros que estão na tabela tickets, e os que não estão em raffle_round_tickets ele irá marcar como unligible = X
+        //Gero o CSV e entrego ele pronto para download
+
+        const round = await RaffleRound.find(roundId);
+        if (!round) {
+            return { success: false, message: 'Round not found' }
+        }
+
+        //const raffleId = round.raffleId;
+        //Busco todos os tickets do raffle
+        const allTicketsResult: any = await db.rawQuery(`
+            SELECT ticket_number
+            FROM tickets
+            ORDER BY ticket_number ASC
+        `);
+
+        const allTickets = allTicketsResult[0] || [];
+
+        //Busco os tickets do round
+        const roundTicketsResult: any = await db.rawQuery(`
+            SELECT ticket_number
+            FROM raffle_round_tickets
+            WHERE round_id = ?
+        `, [roundId]);
+
+        const roundTicketsSet = new Set(roundTicketsResult[0]?.map((row: any) => row.ticket_number) || []);
+
+        //Monta o CSV
+        let csvContent = 'ticket_number,unligible\n';
+
+        for (const ticket of allTickets) {
+            const ticketNumber = ticket.ticket_number;
+            const unligible = roundTicketsSet.has(ticketNumber) ? '' : 'X';
+            csvContent += `${ticketNumber},${unligible}\n`;
+        }
+
+        return { success: true, data: csvContent };
+    }
+
+    //Encerrar Round
+    static async closeRound(params: { roundId: number }) {
+        const { roundId } = params;
+        
+        const round = await RaffleRound.find(roundId);
+        if (!round) {
+            return { success: false, message: 'Round not found' };
+        }
+
+        round.status = 'closed';
+        round.decidedAt = DateTime.now();
+        await round.save();
+
+        return { success: true, message: 'Round closed successfully' };
+    }
+
     static async startRound(params: StartParams) {
 
         const { roundId } = params;
@@ -52,6 +114,14 @@ export default class RoundService {
         `, [round.raffleId, roundId]);
 
         const ticketsCount = result[0]?.affectedRows || 0;
+
+        const jsDate: Date = new Date();
+
+        //Atualizo o status do round para 'running' e salvo a contagem de tickets
+        round.status = 'running';
+        round.ticketsCount = ticketsCount;
+        round.startAt = DateTime.fromJSDate(jsDate);
+        await round.save();
 
         return {
             success: true,

@@ -423,6 +423,26 @@ export default class TicketsController {
   //Devolução de Tickets (Ticket Returns)
   public async returnTickets({ request, response }: HttpContext) {
 
+    const csvFile = request.file('file', {
+      extnames: ['csv'],
+    })
+
+    if (!csvFile) {
+      return response.badRequest({ success: false, message: 'CSV file is required' })
+    }
+
+     //Lê o conteúdo do arquivo temporário
+    const csvData = await fs.readFile(csvFile.tmpPath!, 'utf-8')
+
+
+    const returnTickets = await TicketsService.returnTicketsByBooklet(csvData);
+
+    return response.ok({ success: true, data: returnTickets })
+
+
+
+    /*
+
       const payload = {
         tenant_id: 1,  //temporário, depois pegar do auth
         event_id: 1, //temporário, depois pegar do body
@@ -445,7 +465,7 @@ export default class TicketsController {
       } catch (e: any) {
         return response.badRequest({ success: false, message: e.message });
       }
-  
+    */
   
   }
 

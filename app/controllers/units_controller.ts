@@ -1,4 +1,5 @@
 import Unit from '#models/unit'
+import UnitService from '#services/unit_service'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class UnitsController {
@@ -65,12 +66,21 @@ export default class UnitsController {
 
   async unitsList() {
 
+    const units = await UnitService.listUnits()
+    return units
+
+
+    /*
+
     const units = await Unit.query().orderBy('id', 'asc')
+
+
 
     return {
       total: units.length,
       data: units.map((u) => ({ id: u.id, name: u.name })),
     }
+      */
 
   }
 }

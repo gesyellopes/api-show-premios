@@ -17,4 +17,16 @@ export default class GroupService {
       ])
   }
 
+
+  //Listo dados por grupo
+  static async getGroupData(groupId: number, fields?: string[]) {
+    if (fields && Array.isArray(fields) && fields.length > 0) {
+      const group = await Group.query().where('id', groupId).select(fields).first();
+      return group;
+    } else {
+      const group = await Group.findBy('id', groupId);
+      return group;
+    }
+  }
+
 }

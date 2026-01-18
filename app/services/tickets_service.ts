@@ -206,7 +206,7 @@ export default class TicketsService {
         vendor: vendor ? { id: vendor.id, name: vendor.name, whatsapp: vendor.whatsapp } : null,
         deliveredOn: ticket.deliveredOn,
         validated: ticket.validated,
-        validatedOn: ticket.validatedOn,
+        validatedOn: ticket.validatedOn, //Preciso de uma biblioteca que subtraia 3 horas aqui
         mirror: ticket.ticketMirror,
         paid: 0 //campo reservado pro futuro
       }
@@ -257,7 +257,7 @@ export default class TicketsService {
       const tickets = await Ticket.query()
         .whereIn('ticket_number', chunk)
         .select(['id', 'ticket_number'])
-      
+
       tickets.forEach(ticket => {
         ticketMap.set(ticket.ticketNumber, ticket.id)
       })
@@ -271,7 +271,7 @@ export default class TicketsService {
       const cols = lines[i].split(',').map(c => c.trim())
       const ticketNumber = cols[0]
       const ticketId = ticketMap.get(ticketNumber)
-      
+
       if (!ticketId) {
         skipped++
         continue
@@ -311,7 +311,7 @@ export default class TicketsService {
       await db.rawQuery(sql, bindings)
     }
 
-    return { 
+    return {
       inserted: ticketNumbersPayload.length,
       skipped: skipped,
       total_csv_lines: lines.length - 1
@@ -374,6 +374,23 @@ export default class TicketsService {
 
       for (const ticket of tickets) {
         totalProcessed++
+
+
+        //Vejo se já está no log de devolvido
+        const existingLog = await TicketLog.query()
+          .where('tenant_id', TENANT_ID)
+          .where('event_id', event_id)
+          .where('ticket_number', ticket.ticketNumber)
+          .where('action', 'ticket_returned')
+          .first()
+
+        if (existingLog) {
+          skipped.push(ticket.ticketNumber)
+          totalSkipped++
+          continue
+        }
+
+
         if (ticket.validated) {
           skipped.push(ticket.ticketNumber)
           totalSkipped++
@@ -398,7 +415,7 @@ export default class TicketsService {
           unitId: previousUnitId,
           groupId: previousGroupId,
           vendorId: previousVendorId,
-          log: {reason}
+          log: { reason }
         })
 
         totalReturned++
@@ -427,5 +444,134 @@ export default class TicketsService {
     }
 
   }
-  
+
+
+  //Serviço de devolução de tickets por cartela
+  static async returnTicketsByBooklet(csv : string) {
+
+    const DEFAULT_UNIT_ID = 9;
+    const TENANT_ID = 1;
+    const REASON = "Devolução por coordenador";
+    const EVENT_ID = 1;
+    
+    if (!csv) {
+      throw new Error('csv é obrigatório');
+    }
+
+    // Processa o CSV
+    const lines: string[] = csv.split('\n').map((line: string) => line.trim()).filter((line: string) => line.length > 0);
+    if (lines.length < 1) {
+      throw new Error('CSV inválido ou vazio');
+    }
+
+    let totalProcessed = 0;
+    let totalReturned = 0;
+    let totalSkipped = 0;
+    const skipped: string[] = [];
+
+    for (const line of lines as string[]) {
+      const ticketNumber = line;
+      // Busca o ticket
+      const ticket = await Ticket.query()
+        .where('ticket_number', ticketNumber)
+        .first();
+
+      if (!ticket) {
+        totalSkipped++;
+        skipped.push(ticketNumber);
+        continue;
+      }
+
+      totalProcessed++;
+      if (ticket.validated) {
+        totalSkipped++;
+        skipped.push(ticket.ticketNumber);
+        continue;
+      }
+
+      const previousVendorId = ticket.vendorId;
+      const previousUnitId = ticket.unitId;
+      const previousGroupId = ticket.groupId;
+
+      // Atualiza o ticket
+      ticket.vendorId = null;
+      ticket.deliveredOn = null;
+      ticket.unitId = DEFAULT_UNIT_ID;
+      await ticket.save();
+
+      // Log JSON
+      await TicketLog.create({
+        tenantId: TENANT_ID,
+        eventId: EVENT_ID,
+        ticketNumber: ticket.ticketNumber,
+        action: 'ticket_returned',
+        unitId: previousUnitId,
+        groupId: previousGroupId,
+        vendorId: previousVendorId,
+        log: { REASON }
+      });
+
+      totalReturned++;
+    }
+
+    return {
+      total_processed: totalProcessed,
+      total_returned: totalReturned,
+      skipped: {
+        total: totalSkipped,
+        ticket_numbers: skipped
+      }
+    };
+  }
+
+
+  //Contagem de ticket por chave
+  static async countTicketsByKey(
+    keysOrObj: Array<'unit_id' | 'group_id' | 'vendor_id' | 'validated'> | Record<string, number | string | boolean | Array<number | string | boolean>>,
+    valuesOrLog?: Record<string, Array<number | string | boolean>> | boolean,
+    logParam?: boolean
+  ) {
+    let table = 'tickets';
+    let keys: string[] = [];
+    let values: Record<string, Array<number | string | boolean>> = {};
+    let log = false;
+
+    if (Array.isArray(keysOrObj)) {
+      // Chamada antiga: (keys, values, log)
+      keys = keysOrObj;
+      values = (valuesOrLog as Record<string, Array<number | string | boolean>>) || {};
+      log = logParam ?? false;
+    } else if (typeof keysOrObj === 'object' && keysOrObj !== null) {
+      // Nova chamada: (obj, log?)
+      keys = Object.keys(keysOrObj);
+      for (const k of keys) {
+        const v = keysOrObj[k];
+        values[k] = Array.isArray(v) ? v : [v];
+      }
+      log = typeof valuesOrLog === 'boolean' ? valuesOrLog : false;
+    } else {
+      throw new Error('Parâmetros inválidos para countTicketsByKey');
+    }
+
+    if (keys.length === 0) {
+      throw new Error('Informe ao menos uma key para agrupar');
+    }
+
+    if (log) {
+      table = 'ticket_logs';
+    }
+
+    let query = db.from(table).count('* as total');
+
+    for (const k of keys) {
+      if (values[k] && values[k].length > 0) {
+        query = query.whereIn(k, values[k]);
+      }
+    }
+
+    const rows: Array<any> = await query;
+    // Sempre retorna apenas o total geral
+    return Number(rows[0]?.total ?? 0);
+  }
+
 }
