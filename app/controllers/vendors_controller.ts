@@ -81,7 +81,7 @@ export default class VendorsController {
                 ticketTo: payload.ticket_to,
                 groupName: payload.group_name,
                 unitId: Number(payload.unit_id),
-                imageUrl: 'https://storage.showdepremios.cloud/file/1766990765105.jpeg',
+                //imageUrl: 'https://storage.showdepremios.cloud/file/1766990765105.jpeg',
             })
 
             return {
