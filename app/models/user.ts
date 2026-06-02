@@ -6,12 +6,12 @@ import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
 const AuthFinder = withAuthFinder(() => hash.use(), {
-  uids: ['whatsapp'],              // ✅ login por whatsapp
+  uids: ['whatsapp'],
   passwordColumnName: 'password',
 })
 
 export default class User extends compose(BaseModel, AuthFinder) {
-  static table = 'users'           // ✅ garante nome da tabela
+  static table = 'users'
 
   @column({ isPrimary: true })
   declare id: number
@@ -20,22 +20,21 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare name: string
 
   @column()
-  declare whatsapp: string
+  declare whatsapp: string | null
 
   @column({ serializeAs: null })
-  declare password: string
+  declare password: string | null
 
   @column()
   declare role: string | null
 
-  // ✅ no banco é tenant_id (snake_case). No TS usamos tenantId
   @column({ columnName: 'tenant_id' })
   declare tenantId: number | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoUpdate: true })
   declare updatedAt: DateTime
 
   static accessTokens = DbAccessTokensProvider.forModel(User)

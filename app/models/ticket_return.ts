@@ -7,22 +7,19 @@ export default class TicketReturn extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'tenant_id' })
   declare tenantId: number
 
-  @column()
-  declare eventId: number
+  @column({ columnName: 'event_id' })
+  declare eventId: number | null
 
-  @column()
+  @column({ columnName: 'unit_id' })
   declare unitId: number
 
-  @column()
-  declare groupId: number
-
-  @column()
+  @column({ columnName: 'ticket_from' })
   declare ticketFrom: string
 
-  @column()
+  @column({ columnName: 'ticket_to' })
   declare ticketTo: string
 
   @column()

@@ -7,34 +7,34 @@ export default class RaffleRoundTicketHit extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'tenant_id' })
   declare tenantId: number
 
-  @column()
+  @column({ columnName: 'raffle_id' })
   declare raffleId: number
 
-  @column()
+  @column({ columnName: 'round_id' })
   declare roundId: number
 
-  @column()
+  @column({ columnName: 'ticket_id' })
   declare ticketId: number
 
-  // acertos acumulados (0..20)
-  @column()
+  @column({ columnName: 'ticket_number' })
+  declare ticketNumber: string | null
+
+  @column({ columnName: 'hits_count' })
   declare hitsCount: number
 
-  // auditoria
-  @column()
+  @column({ columnName: 'last_called_number' })
   declare lastCalledNumber: number | null
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'last_hit_at' })
   declare lastHitAt: DateTime | null
 
-  // winner
-  @column()
+  @column({ columnName: 'is_winner' })
   declare isWinner: boolean
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'won_at' })
   declare wonAt: DateTime | null
 
   @column.dateTime({ autoCreate: true })
@@ -42,13 +42,4 @@ export default class RaffleRoundTicketHit extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-
-  /**
-   * TODO (future):
-   * Relations (optional)
-   *
-   * - belongsTo round (raffle_rounds.id)
-   * - belongsTo ticket (tickets.id)
-   * - belongsTo raffle (raffles.id)
-   */
 }

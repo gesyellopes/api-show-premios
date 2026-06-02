@@ -10,7 +10,6 @@ export default class Ticket extends BaseModel {
   @column({ columnName: 'ticket_number' })
   declare ticketNumber: string
 
-  // no seu schema a coluna chama "event" (não event_id)
   @column()
   declare event: number | null
 
@@ -41,6 +40,6 @@ export default class Ticket extends BaseModel {
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoUpdate: true })
   declare updatedAt: DateTime
 }

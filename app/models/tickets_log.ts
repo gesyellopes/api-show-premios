@@ -1,29 +1,26 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 
-export default class RaffleRoundTicket extends BaseModel {
-  public static table = 'raffle_round_tickets'
+export default class TicketsLog extends BaseModel {
+  static table = 'tickets_log'
 
   @column({ isPrimary: true })
   declare id: number
 
-  @column({ columnName: 'raffle_id' })
-  declare raffleId: number
-
-  @column({ columnName: 'round_id' })
-  declare roundId: number
-
   @column({ columnName: 'ticket_id' })
-  declare ticketId: number
+  declare ticketId: number | null
 
   @column({ columnName: 'ticket_number' })
   declare ticketNumber: string | null
 
-  @column()
-  declare eligible: boolean
+  @column({ columnName: 'event_id' })
+  declare eventId: number | null
 
-  @column({ columnName: 'ineligible_reason' })
-  declare ineligibleReason: string | null
+  @column({ columnName: 'user_id' })
+  declare userId: number | null
+
+  @column.dateTime()
+  declare date: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

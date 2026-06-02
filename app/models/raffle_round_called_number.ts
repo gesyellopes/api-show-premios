@@ -7,24 +7,22 @@ export default class RaffleRoundCalledNumber extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'tenant_id' })
   declare tenantId: number
 
-  @column()
+  @column({ columnName: 'raffle_id' })
   declare raffleId: number
 
-  @column()
+  @column({ columnName: 'round_id' })
   declare roundId: number
 
-  // número da bola sorteada (1..75)
   @column()
   declare number: number
 
-  // ordem em que a bola foi chamada (1, 2, 3...)
-  @column()
+  @column({ columnName: 'draw_order' })
   declare drawOrder: number
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'drawn_at' })
   declare drawnAt: DateTime
 
   @column.dateTime({ autoCreate: true })
@@ -32,12 +30,4 @@ export default class RaffleRoundCalledNumber extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-
-  /**
-   * TODO (future):
-   * Relations (optional)
-   *
-   * - belongsTo round (raffle_rounds.id)
-   * - belongsTo raffle (raffles.id)
-   */
 }

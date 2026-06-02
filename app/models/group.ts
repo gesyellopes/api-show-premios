@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 
 export default class Group extends BaseModel {
-  static table = 'group' // ✅ sua tabela chama "group"
+  static table = 'group'
 
   @column({ isPrimary: true })
   declare id: number
@@ -11,7 +11,7 @@ export default class Group extends BaseModel {
   declare name: string
 
   @column({ columnName: 'unit_id' })
-  declare unitId: number
+  declare unitId: number | null
 
   @column({ columnName: 'manager_id' })
   declare managerId: number | null

@@ -9,10 +9,10 @@ export default class Raffle extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'tenant_id' })
   declare tenantId: number
 
-  @column()
+  @column({ columnName: 'event_id' })
   declare eventId: number
 
   @column()
@@ -21,7 +21,7 @@ export default class Raffle extends BaseModel {
   @column()
   declare status: RaffleStatus
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'event_date' })
   declare eventDate: DateTime
 
   @column()
@@ -32,19 +32,4 @@ export default class Raffle extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-
-  /**
-   * TODO (future):
-   * Relations (optional)
-   *
-   * - hasMany rounds (raffle_rounds.raffle_id)
-   *
-   * Example:
-   * import { hasMany } from '@adonisjs/lucid/orm'
-   * import type { HasMany } from '@adonisjs/lucid/types/relations'
-   * import RaffleRound from '#models/raffle_round'
-   *
-   * @hasMany(() => RaffleRound, { foreignKey: 'raffleId' })
-   * declare rounds: HasMany<typeof RaffleRound>
-   */
 }

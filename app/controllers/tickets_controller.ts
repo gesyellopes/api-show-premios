@@ -3,6 +3,7 @@ import Ticket from '#models/ticket'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import TicketsService from '#services/tickets_service'
+import TicketValidationService from '#services/ticket_validation_service'
 import fs from 'node:fs/promises'
 
 function padLeft(n: number, width: number) {
@@ -20,7 +21,12 @@ function parseRange(from: string, to: string) {
   const start = Number(from)
   const end = Number(to)
 
-  if (!Number.isInteger(start) || !Number.isInteger(end) || Number.isNaN(start) || Number.isNaN(end)) {
+  if (
+    !Number.isInteger(start) ||
+    !Number.isInteger(end) ||
+    Number.isNaN(start) ||
+    Number.isNaN(end)
+  ) {
     throw new Error('from/to precisam ser números (mesmo que com zeros à esquerda)')
   }
 
@@ -31,8 +37,6 @@ function parseRange(from: string, to: string) {
 
 export default class TicketsController {
   async index({ request }: HttpContext) {
-
-
     const payload = {
       page: request.input('page', 1),
       limit: request.input('limit', 50),
@@ -41,11 +45,10 @@ export default class TicketsController {
       vendorName: request.input('vendor_name'),
       vendorWhatsapp: request.input('vendor_whatsapp'),
       validated: request.input('validated'),
-      ticketNumber: request.input('ticket_number')
+      ticketNumber: request.input('ticket_number'),
     }
 
-    return TicketsService.getTickets(payload);
-
+    return TicketsService.getTickets(payload)
 
     /*
 
@@ -115,6 +118,7 @@ export default class TicketsController {
   public async validateByBody({ request, response }: HttpContext) {
     const ticketNumber = request.input('ticket_number')
     const ticketMirror = request.input('ticket_mirror')
+    const validatedOn = request.input('validated_on')
 
     if (!ticketNumber) {
       return response.badRequest({ success: false, message: 'ticket_number é obrigatório' })
@@ -124,28 +128,34 @@ export default class TicketsController {
       return response.badRequest({ success: false, message: 'ticket_mirror é obrigatório' })
     }
 
-    const ticket = await Ticket.query()
-      .where('ticket_number', ticketNumber)
-      .first()
-
-    if (!ticket) {
-      return response.notFound({ success: false, message: 'Ticket não encontrado' })
+    if (!validatedOn) {
+      return response.badRequest({ success: false, message: 'validated_on é obrigatório' })
     }
 
-    // atualiza sempre (mesmo se já validado) conforme sua regra
-    ticket.ticketMirror = ticketMirror
-    ticket.validated = true
-    ticket.validatedOn = DateTime.now()
+    try {
+      const result = await TicketValidationService.validateTicket(
+        ticketNumber,
+        DateTime.fromISO(validatedOn),
+        ticketMirror
+      )
+      return result
+    } catch (error: any) {
+      return response.badRequest({ success: false, message: error.message })
+    }
+  }
 
-    await ticket.save()
+  public async invalidateByBody({ request, response }: HttpContext) {
+    const ticketNumber = request.input('ticket_number')
 
-    return {
-      success: true,
-      data: {
-        ticket_number: ticket.ticketNumber,
-        validated: true,
-        validated_on: ticket.validatedOn,
-      },
+    if (!ticketNumber) {
+      return response.badRequest({ success: false, message: 'ticket_number é obrigatório' })
+    }
+
+    try {
+      const result = await TicketValidationService.invalidateTicket(ticketNumber)
+      return result
+    } catch (error: any) {
+      return response.badRequest({ success: false, message: error.message })
     }
   }
 
@@ -201,9 +211,13 @@ export default class TicketsController {
       unitId: payload.unit_id ?? ticket.unitId,
       groupId: payload.group_id ?? ticket.groupId,
       vendorId: payload.vendor_id ?? ticket.vendorId,
-      deliveredOn: payload.delivered_on ? DateTime.fromISO(payload.delivered_on) : ticket.deliveredOn,
+      deliveredOn: payload.delivered_on
+        ? DateTime.fromISO(payload.delivered_on)
+        : ticket.deliveredOn,
       validated: payload.validated ?? ticket.validated,
-      validatedOn: payload.validated_on ? DateTime.fromISO(payload.validated_on) : ticket.validatedOn,
+      validatedOn: payload.validated_on
+        ? DateTime.fromISO(payload.validated_on)
+        : ticket.validatedOn,
     })
 
     await ticket.save()
@@ -216,8 +230,7 @@ export default class TicketsController {
     return response.noContent()
   }
 
-
-   /**
+  /**
    * POST /tickets/bulk/create
    * body: { from, to, event, organization_id }
    */
@@ -401,7 +414,6 @@ export default class TicketsController {
     }
   }
 
-
   //Upload Tickets via CSV
   public async uploadCsv({ request, response }: HttpContext) {
     const csvFile = request.file('file', {
@@ -419,10 +431,8 @@ export default class TicketsController {
     return response.ok({ success: true, data: result })
   }
 
-
   //Devolução de Tickets (Ticket Returns)
   public async returnTickets({ request, response }: HttpContext) {
-
     const csvFile = request.file('file', {
       extnames: ['csv'],
     })
@@ -431,15 +441,12 @@ export default class TicketsController {
       return response.badRequest({ success: false, message: 'CSV file is required' })
     }
 
-     //Lê o conteúdo do arquivo temporário
+    //Lê o conteúdo do arquivo temporário
     const csvData = await fs.readFile(csvFile.tmpPath!, 'utf-8')
 
-
-    const returnTickets = await TicketsService.returnTicketsByBooklet(csvData);
+    const returnTickets = await TicketsService.returnTicketsByBooklet(csvData)
 
     return response.ok({ success: true, data: returnTickets })
-
-
 
     /*
 
@@ -466,7 +473,5 @@ export default class TicketsController {
         return response.badRequest({ success: false, message: e.message });
       }
     */
-  
   }
-
 }

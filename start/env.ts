@@ -33,8 +33,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   TOKEN_INSTANCE: Env.schema.string(),
   INSTANCE_ID: Env.schema.string(),
 
-
   //REDIS
-  REDIS_URL: Env.schema.string()
+  // REDIS_URL: Env.schema.string()
 
 })

@@ -9,21 +9,21 @@ export default class TicketNumber extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'tenant_id' })
   declare tenantId: number
 
-  @column()
+  @column({ columnName: 'ticket_id' })
   declare ticketId: number
 
-  // AJUDE
+  @column({ columnName: 'ticket_number' })
+  declare ticketNumber: string | null
+
   @column()
   declare letter: TicketLetter
 
-  // 1..4 (posição dentro da letra)
   @column()
   declare position: number
 
-  // 1..75
   @column()
   declare value: number
 
@@ -32,11 +32,4 @@ export default class TicketNumber extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-
-  /**
-   * TODO (future):
-   * Relations (optional)
-   *
-   * - belongsTo ticket (tickets.id)
-   */
 }

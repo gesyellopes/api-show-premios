@@ -1,20 +1,20 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 
-export default class Unit extends BaseModel {
-  static table = 'unit'
+export default class QrReadError extends BaseModel {
+  static table = 'qr_read_errors'
 
   @column({ isPrimary: true })
   declare id: number
 
+  @column({ columnName: 'sent_by' })
+  declare sentBy: string
+
+  @column.dateTime({ columnName: 'sent_at' })
+  declare sentAt: DateTime
+
   @column()
-  declare name: string
-
-  @column({ columnName: 'organization_id' })
-  declare organizationId: number | null
-
-  @column({ columnName: 'manager_id' })
-  declare managerId: number | null
+  declare file: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

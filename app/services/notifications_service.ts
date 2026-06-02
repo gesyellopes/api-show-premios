@@ -62,6 +62,9 @@ Segue abaixo as instruções de como enviar os canhotos. Qualquer dúvida é só
     if (!user) {
       throw new Error('Usuário não encontrado para notificação de atualização de range')
     }
+    if (!user.whatsapp) {
+      throw new Error('Usuário sem número de WhatsApp para notificação')
+    }
     const unit = await Unit.findBy('id', input.unitId)
     const unitName = unit?.name ?? 'Nome da comunidade'
 

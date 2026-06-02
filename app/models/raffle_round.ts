@@ -9,13 +9,13 @@ export default class RaffleRound extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'raffle_id' })
   declare raffleId: number
 
   @column()
   declare description: string | null
 
-  @column()
+  @column({ columnName: 'round_number' })
   declare roundNumber: number
 
   @column()
@@ -24,13 +24,13 @@ export default class RaffleRound extends BaseModel {
   @column()
   declare prize: string | null
 
-  @column()
+  @column({ columnName: 'tickets_count' })
   declare ticketsCount: number | null
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'start_at' })
   declare startAt: DateTime | null
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'decided_at' })
   declare decidedAt: DateTime | null
 
   @column.dateTime({ autoCreate: true })
@@ -38,14 +38,4 @@ export default class RaffleRound extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-
-  /**
-   * TODO (future):
-   * Relations (optional)
-   *
-   * - belongsTo raffle (raffles.id)
-   * - hasMany calledNumbers (raffle_round_called_numbers.round_id)
-   * - hasMany hits (raffle_round_ticket_hits.round_id)
-   * - manyToMany tickets via raffle_rounds_tickets
-   */
 }

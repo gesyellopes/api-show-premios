@@ -1,41 +1,33 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 
-export type TicketLogAction =
-  | 'ticket_assigned'
-  | 'ticket_returned'
-  | 'ticket_verified'
-  | 'ticket_voided'
-  | 'ticket_updated'
-
 export default class TicketLog extends BaseModel {
   public static table = 'ticket_logs'
 
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'tenant_id' })
   declare tenantId: number
 
-  @column()
+  @column({ columnName: 'event_id' })
   declare eventId: number | null
 
-  @column()
+  @column({ columnName: 'ticket_number' })
   declare ticketNumber: string | null
 
   @column()
-  declare action: TicketLogAction
+  declare action: string
 
-  @column()
+  @column({ columnName: 'unit_id' })
   declare unitId: number | null
 
-  @column()
+  @column({ columnName: 'group_id' })
   declare groupId: number | null
 
-  @column()
+  @column({ columnName: 'vendor_id' })
   declare vendorId: number | null
 
-  // JSON livre: { message, before, after, payload, ip, user_agent, ... }
   @column()
   declare log: any | null
 

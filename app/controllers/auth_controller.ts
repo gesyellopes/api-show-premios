@@ -82,15 +82,17 @@ export default class AuthController {
         const code = generateOtpCode()
         const codeHash = await hash.make(code)
 
-        const expiresAt = DateTime.now().plus({ minutes: 30 }).toFormat('yyyy-LL-dd HH:mm:ss') // ajuste aqui (X horas/min)
+        const expiresAt = DateTime.now().plus({ minutes: 30 })
 
         // (opcional) invalidar OTPs anteriores ainda válidos desse whatsapp/purpose
+        const now = DateTime.now()
+        const nowStr = now.toSQL()
         await Otp.query()
             .where('whatsapp', whatsapp)
             .where('purpose', 'password_reset')
             .whereNull('consumedAt')
-            .where('expiresAt', '>', DateTime.now().toFormat('yyyy-LL-dd HH:mm:ss'))
-            .update({ consumedAt: DateTime.now().toFormat('yyyy-LL-dd HH:mm:ss') })
+            .where('expiresAt', '>', nowStr as any)
+            .update({ consumedAt: now })
 
         // cria registro OTP (userId pode ser null)
         await Otp.create({
@@ -137,11 +139,12 @@ export default class AuthController {
         }
 
         // busca OTP mais recente ainda não consumido e não expirado
+        const now = DateTime.now()
         const otp = await Otp.query()
             .where('whatsapp', whatsapp)
             .where('purpose', 'password_reset')
             .whereNull('consumedAt')
-            .where('expiresAt', '>', DateTime.now().toFormat('yyyy-LL-dd HH:mm:ss'))
+            .where('expiresAt', '>', now.toSQL() as any)
             .orderBy('id', 'desc')
             .first()
 
@@ -199,11 +202,12 @@ export default class AuthController {
             return response.badRequest({ success: false, message: 'Dados inválidos.' })
         }
 
+        const now = DateTime.now()
         const otp = await Otp.query()
             .where('whatsapp', whatsapp)
             .where('purpose', 'password_reset')
             .whereNull('consumedAt')
-            .where('expiresAt', '>', DateTime.now().toFormat('yyyy-LL-dd HH:mm:ss'))
+            .where('expiresAt', '>', now.toSQL() as any)
             .orderBy('id', 'desc')
             .first()
 

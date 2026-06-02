@@ -37,7 +37,7 @@ import { middleware } from '#start/kernel'
  * Infra / Queues
  * ============================================================================
  */
-import { testQueue } from './queues/queue_test.js'
+// import { testQueue } from './queues/queue_test.js'
 import RafflesController from '#controllers/raffles_controller'
 import RaffleRoundsController from '#controllers/raffle_rounds_controller'
 
@@ -73,12 +73,10 @@ router
      * UNITS
      * ------------------------------------------------------------------------
      */
-    
 
-    router
-      .get('units/list', [UnitsController, 'unitsList'])
-      //.use(middleware.auth())
-      //.use(middleware.acl({ permission: 'view_units' }))
+    router.get('units/list', [UnitsController, 'unitsList'])
+    //.use(middleware.auth())
+    //.use(middleware.acl({ permission: 'view_units' }))
 
     router.resource('units', UnitsController).apiOnly()
 
@@ -106,9 +104,10 @@ router
      * TICKETS
      * ------------------------------------------------------------------------
      */
-    
+
     router.get('validate/:ticket_number', [TicketsController, 'checkValidation'])
     router.post('validate', [TicketsController, 'validateByBody'])
+    router.post('invalidate', [TicketsController, 'invalidateByBody'])
 
     router.post('tickets/return', [TicketsController, 'returnTickets'])
     router.post('tickets/bulk/create', [TicketsController, 'bulkCreate'])
@@ -130,22 +129,20 @@ router
      * NOTIFICATIONS
      * ------------------------------------------------------------------------
      */
-    router.get(
-      'notifications/request-ticket-registration/:id',
-      [NotificationsController, 'requestTicketRegistration']
-    )
+    router.get('notifications/request-ticket-registration/:id', [
+      NotificationsController,
+      'requestTicketRegistration',
+    ])
 
     /**
      * ------------------------------------------------------------------------
      * RAFFLES
      * ------------------------------------------------------------------------
      */
-    
 
     //All Raffle Round routes
     router.get('raffle/:id/rounds', [RaffleRoundsController, 'roundsByRaffleId'])
-    
-    
+
     router.resource('raffle/round', RaffleRoundsController).apiOnly()
 
     //Call Number
@@ -157,14 +154,12 @@ router
 
     //End round
     router.post('raffle/round/:id/end', [RaffleRoundsController, 'closeRound'])
-   
+
     //Export CSV of round tickets
     router.get('raffle/round/:id/export', [RaffleRoundsController, 'exportCsv'])
 
     router.post('raffle/tickets/upload-csv', [TicketsController, 'uploadCsv'])
     router.resource('raffle', RafflesController).apiOnly()
-
-
   })
   .prefix('/api/v1')
 
@@ -188,14 +183,14 @@ router
  * INFRA / DEV ROUTES
  * ============================================================================
  */
-router.get('/test-queue', async () => {
-  await testQueue.add('test-job', {
-    message: 'Fila funcionando 🎯',
-    timestamp: new Date().toISOString(),
-  })
+// router.get('/test-queue', async () => {
+//   await testQueue.add('test-job', {
+//     message: 'Fila funcionando 🎯',
+//     timestamp: new Date().toISOString(),
+//   })
 
-  return { success: true }
-})
+//   return { success: true }
+// })
 
 /**
  * ============================================================================

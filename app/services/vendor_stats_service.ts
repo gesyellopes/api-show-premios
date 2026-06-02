@@ -142,7 +142,7 @@ export default class VendorRangeService {
 
       let unit: Unit | null = null
 
-      if (group) {
+      if (group && group.unitId) {
         unit = await Unit.query().select('name').where('id', group.unitId).first()
       }
 
@@ -208,7 +208,7 @@ export default class VendorRangeService {
         .first()
 
       let unit: Unit | null = null
-      if (group) {
+      if (group && group.unitId) {
         unit = await Unit.query().select('name').where('id', group.unitId).first()
       }
 
@@ -334,9 +334,11 @@ export default class VendorRangeService {
           if (group) {
             groupName = group.name ?? null
 
-            const unit = await getUnitCached(group.unitId)
-            unitName = unit?.name ?? null
-            unitId = unit?.id ?? null
+            if (group.unitId) {
+              const unit = await getUnitCached(group.unitId)
+              unitName = unit?.name ?? null
+              unitId = unit?.id ?? null
+            }
           }
         }
 
