@@ -109,7 +109,8 @@ export default class VendorRangeService {
 
     if (vendorIds.length > 0) {
       const totalRows = await db
-        .from('tickets')
+        .connection('secondary')
+        .from('tickets_buritizeiro')
         .select('vendor_id')
         .count('* as total')
         .whereIn('vendor_id', vendorIds)
@@ -120,7 +121,8 @@ export default class VendorRangeService {
       }
 
       const verifiedRows = await db
-        .from('tickets')
+        .connection('secondary')
+        .from('tickets_buritizeiro')
         .select('vendor_id')
         .count('* as total')
         .whereIn('vendor_id', vendorIds)
@@ -182,13 +184,15 @@ export default class VendorRangeService {
 
       // tickets_total e tickets_verified (mesma lógica do index)
       const totalRow = await db
-        .from('tickets')
+        .connection('secondary')
+        .from('tickets_buritizeiro')
         .where('vendor_id', vendor.id)
         .count('* as total')
         .first()
 
       const verifiedRow = await db
-        .from('tickets')
+        .connection('secondary')
+        .from('tickets_buritizeiro')
         .where('vendor_id', vendor.id)
         .where('validated', 1)
         .count('* as total')

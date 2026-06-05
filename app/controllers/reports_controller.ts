@@ -16,7 +16,7 @@ export default class ReportsController {
     const [{ $extras: ticketsExtras }] = await Ticket.query().count('* as total')
 
     const [{ $extras: validatedExtras }] = await Ticket.query()
-      .whereNotNull('validated_on')
+      .where('validated', true)
       .count('* as total')
 
     return {
@@ -32,30 +32,28 @@ export default class ReportsController {
     const end = DateTime.now().endOf('day')
 
     const rows = await db
-      .from('tickets')
+      .connection('secondary')
+      .from('tickets_buritizeiro')
       .select(db.raw('DATE(validated_on) as date'))
       .count('* as total')
-      .whereNotNull('validated_on')
-      .whereBetween('validated_on', [
-        start.toFormat('yyyy-LL-dd HH:mm:ss'),
-        end.toFormat('yyyy-LL-dd HH:mm:ss'),
-      ])
-      .groupBy('date')
-      .orderBy('date', 'asc')
+      .where('validated', true)
+      .whereBetween('validated_on', [start.toISO(), end.toISO()])
+      .groupByRaw('DATE(validated_on)')
+      .orderByRaw('DATE(validated_on) asc')
 
     const countsByDate = new Map<string, number>()
     for (const row of rows as Array<{ date: string | Date; total: string | number }>) {
-      const key =
+      const dateStr =
         row.date instanceof Date
-          ? DateTime.fromJSDate(row.date).toFormat('dd/LL/yyyy')
+          ? DateTime.fromJSDate(row.date).toFormat('yyyy-LL-dd')
           : String(row.date)
-      countsByDate.set(key, Number(row.total))
+      countsByDate.set(dateStr, Number(row.total))
     }
 
     const result: Array<{ date: string; total: number }> = []
     for (let i = 0; i < 7; i++) {
       const day = start.plus({ days: i })
-      const key = day.toFormat('dd/LL/yyyy')
+      const key = day.toFormat('yyyy-LL-dd')
 
       result.push({
         date: key,
@@ -171,7 +169,8 @@ Exemplo de retorno:
 
     if (groupIds.length > 0) {
       const groupTotalRows = await db
-        .from('tickets')
+        .connection('secondary')
+        .from('tickets_buritizeiro')
         .select('group_id')
         .count('* as total')
         .whereIn('group_id', groupIds)
@@ -182,11 +181,12 @@ Exemplo de retorno:
       }
 
       const groupValidatedRows = await db
-        .from('tickets')
+        .connection('secondary')
+        .from('tickets_buritizeiro')
         .select('group_id')
         .count('* as total')
         .whereIn('group_id', groupIds)
-        .whereNotNull('validated_on')
+        .where('validated', true)
         .groupBy('group_id')
 
       for (const row of groupValidatedRows as Array<{ group_id: number; total: string | number }>) {

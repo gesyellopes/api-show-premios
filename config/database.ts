@@ -18,6 +18,16 @@ const dbConfig = defineConfig({
         paths: ['database/migrations'],
       },
     },
+    secondary: {
+      client: 'mysql2',
+      connection: {
+        host: env.get('DB_SECONDARY_HOST'),
+        port: env.get('DB_SECONDARY_PORT'),
+        user: env.get('DB_SECONDARY_USER'),
+        password: env.get('DB_SECONDARY_PASSWORD'),
+        database: env.get('DB_SECONDARY_DATABASE'),
+      },
+    },
   },
 })
 

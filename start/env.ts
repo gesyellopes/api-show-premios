@@ -29,6 +29,17 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_PASSWORD: Env.schema.string.optional(),
   DB_DATABASE: Env.schema.string(),
 
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring secondary database connection
+  |----------------------------------------------------------
+  */
+  DB_SECONDARY_HOST: Env.schema.string({ format: 'host' }),
+  DB_SECONDARY_PORT: Env.schema.number(),
+  DB_SECONDARY_USER: Env.schema.string(),
+  DB_SECONDARY_PASSWORD: Env.schema.string.optional(),
+  DB_SECONDARY_DATABASE: Env.schema.string(),
+
   WAPI_BASE_URL: Env.schema.string.optional(),
   TOKEN_INSTANCE: Env.schema.string(),
   INSTANCE_ID: Env.schema.string(),
