@@ -48,9 +48,9 @@ export default class RoundService {
 
         //const raffleId = round.raffleId;
         //Busco todos os tickets do raffle
-        const allTicketsResult: any = await db.rawQuery(`
+        const allTicketsResult: any = await db.connection('secondary').rawQuery(`
             SELECT ticket_number
-            FROM tickets
+            FROM tickets_buritizeiro
             ORDER BY ticket_number ASC
         `);
 
@@ -106,10 +106,10 @@ export default class RoundService {
 
         //Usa INSERT direto via SQL (muito mais rápido que o ORM)
         //Seleciona apenas os IDs necessários e faz o insert em uma única query
-        const result = await db.rawQuery(`
+        const result = await db.connection('secondary').rawQuery(`
             INSERT INTO raffle_round_tickets (raffle_id, round_id, ticket_id, ticket_number, eligible, ineligible_reason, created_at, updated_at)
             SELECT ?, ?, id, ticket_number, 1, NULL, NOW(), NOW()
-            FROM tickets
+            FROM tickets_buritizeiro
             WHERE validated = 1
         `, [round.raffleId, roundId]);
 

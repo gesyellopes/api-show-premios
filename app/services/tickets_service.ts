@@ -128,7 +128,7 @@ export default class TicketsService {
       }
 
       const sql = `
-        UPDATE tickets
+        UPDATE tickets_buritizeiro
         SET ${setClauses.join(', ')}
         WHERE event = ?
           AND ticket_number IN (${placeholders})
@@ -136,7 +136,7 @@ export default class TicketsService {
 
       bindings.push(Number(event), ...numbers)
 
-      const result: any = await db.rawQuery(sql, bindings)
+      const result: any = await db.connection('secondary').rawQuery(sql, bindings)
       updated += Number(result[0]?.affectedRows ?? 0)
     }
 

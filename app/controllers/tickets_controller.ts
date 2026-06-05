@@ -283,7 +283,7 @@ export default class TicketsController {
        * Se NÃO tiver UNIQUE, pode duplicar sem querer.
        */
       const insertSql = `
-        INSERT IGNORE INTO tickets (ticket_number, event, organization_id)
+        INSERT IGNORE INTO tickets_buritizeiro (ticket_number, event, organization_id)
         VALUES ${rows.map(() => '(?, ?, ?)').join(',')}
       `
 
@@ -292,7 +292,7 @@ export default class TicketsController {
         bindings.push(r.ticket_number, r.event, r.organization_id)
       }
 
-      const result: any = await db.rawQuery(insertSql, bindings)
+      const result: any = await db.connection('secondary').rawQuery(insertSql, bindings)
 
       // MySQL: affectedRows = inseridos (ignorados não contam)
       created += Number(result[0]?.affectedRows ?? 0)
