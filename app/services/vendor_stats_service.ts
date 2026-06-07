@@ -372,17 +372,18 @@ export default class VendorRangeService {
     input: CreateGroupAndAssignTicketsInput
   ): Promise<CreateGroupAndAssignTicketsResult> {
     try {
+      console.log('Creating group with input:', input)
 
-        console.log(input);
       // cria a paróquia (group)
       const group = await Group.create({
         name: input.groupName,
         unitId: input.unitId,
         managerId: input.managerId,
       })
+      console.log('Group created successfully:', group.id)
 
       // vincula as cartelas ao vendor + group
-      await TicketsService.bulkEdit({
+      console.log('Starting bulk edit with params:', {
         event: input.eventId,
         from: input.ticketFrom,
         to: input.ticketTo,
@@ -390,14 +391,30 @@ export default class VendorRangeService {
         groupId: group.id,
       })
 
+      const bulkResult = await TicketsService.bulkEdit({
+        event: input.eventId,
+        from: input.ticketFrom,
+        to: input.ticketTo,
+        vendorId: input.managerId,
+        groupId: group.id,
+      })
+      console.log('Bulk edit result:', bulkResult)
+
       return { success: true, group }
     } catch (error: any) {
+      console.error('Error in createGroupAndAssignTickets:', {
+        message: error?.message,
+        code: error?.code,
+        errno: error?.errno,
+        sql: error?.sql,
+        stack: error?.stack,
+      })
       // mantém a mesma semântica de erro que você tinha
       return {
         success: false,
         message:
           'O vendedor foi criado, mas houve um erro ao criar a paróquia ou atualizar as cartelas. Contate o suporte.',
-        error: error?.message ?? String(error),
+        error: `${error?.message} (${error?.code || 'UNKNOWN'})`,
       }
     }
   }

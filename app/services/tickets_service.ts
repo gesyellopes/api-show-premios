@@ -1,5 +1,6 @@
 // app/services/tickets_service.ts
 import Ticket from '#models/ticket'
+import TicketWhatsappMessage from '#models/ticket_whatsapp_message'
 import db from '@adonisjs/lucid/services/db'
 import Group from '#models/group'
 import Unit from '#models/unit'
@@ -39,11 +40,11 @@ type getTickets = {
 }
 
 type returnTickets = {
-  tenant_id?: number,
-  event_id: number,
-  unit_id?: number,
-  ticket_from: string,
-  ticket_to: string,
+  tenant_id?: number
+  event_id: number
+  unit_id?: number
+  ticket_from: string
+  ticket_to: string
   reason: string
 }
 
@@ -56,6 +57,7 @@ export default class TicketsService {
     const s = String(n)
     return s.length >= width ? s : '0'.repeat(width - s.length) + s
   }
+
 
   /**
    * Exemplo de parseRange esperado:
@@ -130,7 +132,7 @@ export default class TicketsService {
       const sql = `
         UPDATE tickets_buritizeiro
         SET ${setClauses.join(', ')}
-        WHERE event = ?
+        WHERE event_id = ?
           AND ticket_number IN (${placeholders})
       `
 
@@ -150,10 +152,8 @@ export default class TicketsService {
     }
   }
 
-
   //Função de busca
   static async getTickets(input: getTickets) {
-
     const page = input.page ?? 1
     const limit = input.limit ?? 50
 
@@ -175,7 +175,7 @@ export default class TicketsService {
       if (vendorWhatsapp) vendorQuery.where('whatsapp', 'like', `%${vendorWhatsapp}%`)
       const vendors = await vendorQuery.select('id')
 
-      const vendorIds = vendors.map(v => v.id)
+      const vendorIds = vendors.map((v) => v.id)
       query.whereIn('vendor_id', vendorIds)
     }
 
@@ -187,16 +187,22 @@ export default class TicketsService {
     }
     if (ticketNumber) query.where('ticket_number', ticketNumber)
 
-    const tickets = await query.orderBy('ticket_number', 'asc').paginate(page, limit);
+    const tickets = await query.orderBy('ticket_number', 'asc').paginate(page, limit)
 
     const data: any[] = []
 
     //loop nos tickets
     for (const ticket of tickets) {
-
       const unit = ticket.unitId ? await Unit.find(ticket.unitId) : null
       const group = ticket.groupId ? await Group.find(ticket.groupId) : null
       const vendor = ticket.vendorId ? await User.find(ticket.vendorId) : null
+
+      // Busca o primeiro WhatsApp message validado (mais antigo) com prefixo AC
+      const whatsappMessage = await TicketWhatsappMessage.query()
+        .where('ticket_number', `AC${ticket.ticketNumber}`)
+        .where('status', 'VALIDATED')
+        .orderBy('created_at', 'asc')
+        .first()
 
       const ticketData = {
         id: ticket.id,
@@ -208,7 +214,9 @@ export default class TicketsService {
         validated: ticket.validated,
         validatedOn: ticket.validatedOn, //Preciso de uma biblioteca que subtraia 3 horas aqui
         mirror: ticket.ticketMirror,
-        paid: 0 //campo reservado pro futuro
+        paid: 0, //campo reservado pro futuro
+        whatsappSenderNumber: whatsappMessage ? whatsappMessage.senderNumber : null,
+        whatsappSenderName: whatsappMessage ? whatsappMessage.senderName : null,
       }
 
       data.push(ticketData)
@@ -216,15 +224,12 @@ export default class TicketsService {
 
     return {
       meta: tickets.getMeta(),
-      data: data
+      data: data,
     }
-
   }
-
 
   //Processo o CSV passando ele como parâmetro, e faço a inserção em lote no banco
   static async uploadTicketsNumbersCsv(csvData: string) {
-
     //Modelo de dados no CSV
     /*
     TICKET_NUMBER,A1,A2,A3,A4,J1,J2,J3,J4,U1,U2,U3,U4,D1,D2,D3,D4,E1,E2,E3,E4
@@ -233,18 +238,21 @@ export default class TicketsService {
     000003,3,6,11,15,17,21,26,28,32,41,43,44,46,48,58,59,64,66,67,72
     */
 
-    const lines = csvData.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+    const lines = csvData
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
 
     if (lines.length < 2) {
       throw new Error('CSV inválido ou vazio')
     }
 
-    const header = lines[0].split(',').map(h => h.trim())
+    const header = lines[0].split(',').map((h) => h.trim())
 
     // OTIMIZAÇÃO 1: Extrair todos os ticket_numbers do CSV primeiro
     const ticketNumbers: string[] = []
     for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.trim())
+      const cols = lines[i].split(',').map((c) => c.trim())
       if (cols[0]) ticketNumbers.push(cols[0])
     }
 
@@ -258,7 +266,7 @@ export default class TicketsService {
         .whereIn('ticket_number', chunk)
         .select(['id', 'ticket_number'])
 
-      tickets.forEach(ticket => {
+      tickets.forEach((ticket) => {
         ticketMap.set(ticket.ticketNumber, ticket.id)
       })
     }
@@ -268,7 +276,7 @@ export default class TicketsService {
     let skipped = 0
 
     for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.trim())
+      const cols = lines[i].split(',').map((c) => c.trim())
       const ticketNumber = cols[0]
       const ticketId = ticketMap.get(ticketNumber)
 
@@ -289,7 +297,7 @@ export default class TicketsService {
           ticket_number: ticketNumber,
           letter: letter,
           position: position,
-          value: value
+          value: value,
         })
       }
     }
@@ -300,9 +308,16 @@ export default class TicketsService {
       const chunk = ticketNumbersPayload.slice(i, i + CHUNK_SIZE)
       const bindings: any[] = []
       const valuesSql: string[] = []
-      chunk.forEach(item => {
+      chunk.forEach((item) => {
         valuesSql.push('(?, ?, ?, ?, ?, ?, NOW(), NOW())')
-        bindings.push(item.tenant_id, item.ticket_id, item.ticket_number, item.letter, item.position, item.value)
+        bindings.push(
+          item.tenant_id,
+          item.ticket_id,
+          item.ticket_number,
+          item.letter,
+          item.position,
+          item.value
+        )
       })
       const sql = `
         INSERT IGNORE INTO ticket_numbers (tenant_id, ticket_id, ticket_number, letter, position, value, created_at, updated_at)
@@ -314,11 +329,9 @@ export default class TicketsService {
     return {
       inserted: ticketNumbersPayload.length,
       skipped: skipped,
-      total_csv_lines: lines.length - 1
+      total_csv_lines: lines.length - 1,
     }
-
   }
-
 
   //Serviço de devolução de tickets
   static async returnTickets(params: returnTickets) {
@@ -331,7 +344,6 @@ export default class TicketsService {
     if (ticket_from > ticket_to) {
       throw new Error('ticket_from não pode ser maior que ticket_to')
     }
-
 
     //O ticket from e ticket_to são strings, preciso parsear eles
     //O formato vem por exemplo "000001" até "000100"
@@ -356,7 +368,7 @@ export default class TicketsService {
     let totalReturned = 0
     let totalSkipped = 0
 
-    const skipped = <any>[];
+    const skipped = <any>[]
 
     const CHUNK = this.CHUNK
 
@@ -368,13 +380,12 @@ export default class TicketsService {
       }
       //Busco os tickets nesse chunk
       const tickets = await Ticket.query()
-        .where('event', event_id)
+        .where('eventId', event_id)
         //.where('unit_id', unit_id)
         .whereIn('ticket_number', ticketNumbers)
 
       for (const ticket of tickets) {
         totalProcessed++
-
 
         //Vejo se já está no log de devolvido
         const existingLog = await TicketLog.query()
@@ -389,7 +400,6 @@ export default class TicketsService {
           totalSkipped++
           continue
         }
-
 
         if (ticket.validated) {
           skipped.push(ticket.ticketNumber)
@@ -415,15 +425,14 @@ export default class TicketsService {
           unitId: previousUnitId,
           groupId: previousGroupId,
           vendorId: previousVendorId,
-          log: { reason }
+          log: { reason },
         })
 
         totalReturned++
       }
-
     }
 
-    //Registro a devolução  
+    //Registro a devolução
     await TicketReturn.create({
       tenantId: TENANT_ID,
       eventId: event_id,
@@ -431,7 +440,7 @@ export default class TicketsService {
       ticketFrom: ticket_from,
       ticketTo: ticket_to,
       total: totalReturned,
-      reason: reason
+      reason: reason,
     })
 
     return {
@@ -439,65 +448,63 @@ export default class TicketsService {
       total_returned: totalReturned,
       skipped: {
         total: totalSkipped,
-        ticket_numbers: skipped
-      }
+        ticket_numbers: skipped,
+      },
     }
-
   }
 
-
   //Serviço de devolução de tickets por cartela
-  static async returnTicketsByBooklet(csv : string) {
+  static async returnTicketsByBooklet(csv: string) {
+    const DEFAULT_UNIT_ID = 9
+    const TENANT_ID = 1
+    const REASON = 'Devolução por coordenador'
+    const EVENT_ID = 1
 
-    const DEFAULT_UNIT_ID = 9;
-    const TENANT_ID = 1;
-    const REASON = "Devolução por coordenador";
-    const EVENT_ID = 1;
-    
     if (!csv) {
-      throw new Error('csv é obrigatório');
+      throw new Error('csv é obrigatório')
     }
 
     // Processa o CSV
-    const lines: string[] = csv.split('\n').map((line: string) => line.trim()).filter((line: string) => line.length > 0);
+    const lines: string[] = csv
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
     if (lines.length < 1) {
-      throw new Error('CSV inválido ou vazio');
+      throw new Error('CSV inválido ou vazio')
     }
 
-    let totalProcessed = 0;
-    let totalReturned = 0;
-    let totalSkipped = 0;
-    const skipped: string[] = [];
+    let totalProcessed = 0
+    let totalReturned = 0
+    let totalSkipped = 0
+    const skipped: string[] = []
 
     for (const line of lines as string[]) {
-      const ticketNumber = line;
+      const ticketNumber = line
       // Busca o ticket
-      const ticket = await Ticket.query()
-        .where('ticket_number', ticketNumber)
-        .first();
+      const ticket = await Ticket.query().where('ticket_number', ticketNumber).first()
 
       if (!ticket) {
-        totalSkipped++;
-        skipped.push(ticketNumber);
-        continue;
+        totalSkipped++
+        skipped.push(ticketNumber)
+        continue
       }
 
-      totalProcessed++;
+      totalProcessed++
       if (ticket.validated) {
-        totalSkipped++;
-        skipped.push(ticket.ticketNumber);
-        continue;
+        totalSkipped++
+        skipped.push(ticket.ticketNumber)
+        continue
       }
 
-      const previousVendorId = ticket.vendorId;
-      const previousUnitId = ticket.unitId;
-      const previousGroupId = ticket.groupId;
+      const previousVendorId = ticket.vendorId
+      const previousUnitId = ticket.unitId
+      const previousGroupId = ticket.groupId
 
       // Atualiza o ticket
-      ticket.vendorId = null;
-      ticket.deliveredOn = null;
-      ticket.unitId = DEFAULT_UNIT_ID;
-      await ticket.save();
+      ticket.vendorId = null
+      ticket.deliveredOn = null
+      ticket.unitId = DEFAULT_UNIT_ID
+      await ticket.save()
 
       // Log JSON
       await TicketLog.create({
@@ -508,10 +515,10 @@ export default class TicketsService {
         unitId: previousUnitId,
         groupId: previousGroupId,
         vendorId: previousVendorId,
-        log: { REASON }
-      });
+        log: { REASON },
+      })
 
-      totalReturned++;
+      totalReturned++
     }
 
     return {
@@ -519,59 +526,63 @@ export default class TicketsService {
       total_returned: totalReturned,
       skipped: {
         total: totalSkipped,
-        ticket_numbers: skipped
-      }
-    };
+        ticket_numbers: skipped,
+      },
+    }
   }
-
 
   //Contagem de ticket por chave
   static async countTicketsByKey(
-    keysOrObj: Array<'unit_id' | 'group_id' | 'vendor_id' | 'validated'> | Record<string, number | string | boolean | Array<number | string | boolean>>,
+    keysOrObj:
+      | Array<'unit_id' | 'group_id' | 'vendor_id' | 'validated'>
+      | Record<string, number | string | boolean | Array<number | string | boolean>>,
     valuesOrLog?: Record<string, Array<number | string | boolean>> | boolean,
     logParam?: boolean
   ) {
-    let table = 'tickets';
-    let keys: string[] = [];
-    let values: Record<string, Array<number | string | boolean>> = {};
-    let log = false;
+    let table = 'tickets'
+    let keys: string[] = []
+    let values: Record<string, Array<number | string | boolean>> = {}
+    let log = false
 
     if (Array.isArray(keysOrObj)) {
       // Chamada antiga: (keys, values, log)
-      keys = keysOrObj;
-      values = (valuesOrLog as Record<string, Array<number | string | boolean>>) || {};
-      log = logParam ?? false;
+      keys = keysOrObj
+      values = (valuesOrLog as Record<string, Array<number | string | boolean>>) || {}
+      log = logParam ?? false
     } else if (typeof keysOrObj === 'object' && keysOrObj !== null) {
       // Nova chamada: (obj, log?)
-      keys = Object.keys(keysOrObj);
+      keys = Object.keys(keysOrObj)
       for (const k of keys) {
-        const v = keysOrObj[k];
-        values[k] = Array.isArray(v) ? v : [v];
+        const v = keysOrObj[k]
+        values[k] = Array.isArray(v) ? v : [v]
       }
-      log = typeof valuesOrLog === 'boolean' ? valuesOrLog : false;
+      log = typeof valuesOrLog === 'boolean' ? valuesOrLog : false
     } else {
-      throw new Error('Parâmetros inválidos para countTicketsByKey');
+      throw new Error('Parâmetros inválidos para countTicketsByKey')
     }
 
     if (keys.length === 0) {
-      throw new Error('Informe ao menos uma key para agrupar');
+      throw new Error('Informe ao menos uma key para agrupar')
     }
 
     if (log) {
-      table = 'ticket_logs';
+      table = 'ticket_logs'
+    } else {
+      table = 'tickets_buritizeiro'
     }
 
-    let query = db.from(table).count('* as total');
+    let query = log
+      ? db.from(table).count('* as total')
+      : db.connection('secondary').from(table).count('* as total')
 
     for (const k of keys) {
       if (values[k] && values[k].length > 0) {
-        query = query.whereIn(k, values[k]);
+        query = query.whereIn(k, values[k])
       }
     }
 
-    const rows: Array<any> = await query;
+    const rows: Array<any> = await query
     // Sempre retorna apenas o total geral
-    return Number(rows[0]?.total ?? 0);
+    return Number(rows[0]?.total ?? 0)
   }
-
 }

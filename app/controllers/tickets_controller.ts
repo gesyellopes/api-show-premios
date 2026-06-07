@@ -66,7 +66,7 @@ export default class TicketsController {
     const query = Ticket.query()
 
     if (q) query.where('ticket_number', 'like', `%${q}%`)
-    if (event) query.where('event', event)
+    if (event) query.where('eventId', event)
     if (organizationId) query.where('organization_id', organizationId)
     if (unitId) query.where('unit_id', unitId)
     if (groupId) query.where('group_id', groupId)
@@ -174,7 +174,7 @@ export default class TicketsController {
 
     return Ticket.create({
       ticketNumber: payload.ticket_number,
-      event: payload.event ?? null,
+      eventId: payload.event ?? null,
       organizationId: payload.organization_id ?? null,
       unitId: payload.unit_id ?? null,
       groupId: payload.group_id ?? null,
@@ -206,7 +206,7 @@ export default class TicketsController {
 
     ticket.merge({
       ticketNumber: payload.ticket_number ?? ticket.ticketNumber,
-      event: payload.event ?? ticket.event,
+      eventId: payload.event ?? ticket.eventId,
       organizationId: payload.organization_id ?? ticket.organizationId,
       unitId: payload.unit_id ?? ticket.unitId,
       groupId: payload.group_id ?? ticket.groupId,
@@ -269,7 +269,7 @@ export default class TicketsController {
       for (let n = i; n <= chunkEnd; n++) {
         rows.push({
           ticket_number: padLeft(n, range.width),
-          event: Number(event),
+          event_id: Number(event),
           organization_id: Number(organizationId),
           // validated default 0 no banco, então nem precisa enviar
         })
@@ -278,21 +278,21 @@ export default class TicketsController {
       /**
        * Como você não quer FK e pode já existir ticket_number,
        * o melhor é: inserir e ignorar duplicado.
-       * Isso exige índice UNIQUE no par (event, ticket_number).
+       * Isso exige índice UNIQUE no par (event_id, ticket_number).
        *
        * Se NÃO tiver UNIQUE, pode duplicar sem querer.
        */
       const insertSql = `
-        INSERT IGNORE INTO tickets_buritizeiro (ticket_number, event, organization_id)
+        INSERT IGNORE INTO tickets (ticket_number, event_id, organization_id)
         VALUES ${rows.map(() => '(?, ?, ?)').join(',')}
       `
 
       const bindings: any[] = []
       for (const r of rows) {
-        bindings.push(r.ticket_number, r.event, r.organization_id)
+        bindings.push(r.ticket_number, r.event_id, r.organization_id)
       }
 
-      const result: any = await db.connection('secondary').rawQuery(insertSql, bindings)
+      const result: any = await db.rawQuery(insertSql, bindings)
 
       // MySQL: affectedRows = inseridos (ignorados não contam)
       created += Number(result[0]?.affectedRows ?? 0)

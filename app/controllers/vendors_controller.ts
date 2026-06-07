@@ -51,7 +51,7 @@ export default class VendorsController {
 
       // ✅ Service: cria paróquia e atualiza range das cartelas
       const rangeResult = await VendorStatsService.createGroupAndAssignTickets({
-        eventId: 1,
+        eventId: 2,
         unitId: Number(payload.unit_id),
         groupName: payload.group_name,
         managerId: user.id,
@@ -69,8 +69,8 @@ export default class VendorsController {
 
       const group = rangeResult.group
 
-      // ✅ Service: notificação (WhatsApp)
-      await NotificationService.vendorCreated({
+      // ✅ Service: notificação (WhatsApp) - em background, não bloqueia resposta
+      NotificationService.vendorCreated({
         vendorName: payload.vendor_name,
         vendorWhatsapp: payload.vendor_whatsapp,
         ticketFrom: payload.ticket_from,
@@ -78,6 +78,8 @@ export default class VendorsController {
         groupName: payload.group_name,
         unitId: Number(payload.unit_id),
         imageUrl: 'https://files.showdepremios.cloud/instucoes-buritizeiro.jpeg',
+      }).catch((error) => {
+        console.error('Erro ao enviar notificação de vendedor criado:', error)
       })
 
       return {
@@ -137,7 +139,7 @@ export default class VendorsController {
     try {
       // ✅ Service: cria paróquia e atualiza range das cartelas
       const rangeResult = await VendorStatsService.createGroupAndAssignTickets({
-        eventId: 1,
+        eventId: 2,
         unitId: Number(payload.unit_id),
         groupName: payload.group_name,
         managerId: params.id,
@@ -155,13 +157,15 @@ export default class VendorsController {
 
       const group = rangeResult.group
 
-      // ✅ Service: notificação (WhatsApp)
-      await NotificationService.vendorUpdatedRange({
+      // ✅ Service: notificação (WhatsApp) - em background, não bloqueia resposta
+      NotificationService.vendorUpdatedRange({
         vendorId: Number(params.id),
         ticketFrom: payload.ticket_from,
         ticketTo: payload.ticket_to,
         groupName: payload.group_name,
         unitId: Number(payload.unit_id),
+      }).catch((error) => {
+        console.error('Erro ao enviar notificação de atualização de range:', error)
       })
 
       return {

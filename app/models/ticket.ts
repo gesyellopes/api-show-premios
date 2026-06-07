@@ -11,8 +11,8 @@ export default class Ticket extends BaseModel {
   @column({ columnName: 'ticket_number' })
   declare ticketNumber: string
 
-  @column()
-  declare event: number | null
+  @column({ columnName: 'event_id' })
+  declare eventId: number | null
 
   @column({ columnName: 'organization_id' })
   declare organizationId: number | null
