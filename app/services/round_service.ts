@@ -45,7 +45,7 @@ export default class RoundService {
     //Busco todos os tickets do raffle
     const allTicketsResult: any = await db.connection('secondary').rawQuery(`
           SELECT ticket_number
-          FROM tickets_buritizeiro
+          FROM tickets_pirapora
           ORDER BY ticket_number ASC
         `)
 
@@ -107,7 +107,7 @@ export default class RoundService {
     const validatedTicketsResult: any = await db.connection('secondary').rawQuery(
       `
             SELECT id, ticket_number
-            FROM tickets_buritizeiro
+            FROM tickets_pirapora
             WHERE validated = 1
         `
     )
