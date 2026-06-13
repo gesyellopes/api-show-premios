@@ -77,7 +77,7 @@ export default class VendorsController {
         ticketTo: payload.ticket_to,
         groupName: payload.group_name,
         unitId: Number(payload.unit_id),
-        imageUrl: 'https://files.showdepremios.cloud/instucoes-buritizeiro.jpeg',
+        imageUrl: 'https://files.showdepremios.cloud/show-premios-sao-sebastiao.jpeg',
       }).catch((error) => {
         console.error('Erro ao enviar notificação de vendedor criado:', error)
       })
