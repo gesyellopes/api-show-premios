@@ -107,7 +107,7 @@ export default class TicketWhatsappMessagesService {
     }
 
     // 2. Atualizar status para MANUAL_VALIDATED
-    whatsappMessage.status = 'MANUAL_VALIDATED'
+    whatsappMessage.status = 'VALIDATED'
     await whatsappMessage.save()
 
     // 3. Buscar o ticket com prefixo
@@ -146,7 +146,7 @@ export default class TicketWhatsappMessagesService {
     // 6. Enviar mensagem via WhatsApp como reply
     const senderPhone = whatsappMessage.senderNumber
     const replyMessageId = whatsappMessage.whatsappMessageId
-    const message = `O canhoto *${ticket_number}* foi validado com sucesso por um de nossos coordenadores e já está concorrendo`
+    const message = `🟩 O canhoto *${ticket_number}* foi validado com sucesso por um de nossos coordenadores e já está concorrendo 🟩`
 
     try {
       await WapiService.sendWhatsappText({

@@ -111,6 +111,8 @@ export default class TicketsService {
     let updated = 0
     const CHUNK = this.CHUNK
 
+    // console.log('🔧 bulkEdit started:', { event, from, to, vendorId, groupId, unitId, total })
+
     for (let i = range.start; i <= range.end; i += CHUNK) {
       const chunkEnd = Math.min(i + CHUNK - 1, range.end)
 
@@ -138,9 +140,17 @@ export default class TicketsService {
 
       bindings.push(Number(event), ...numbers)
 
+      // console.log('🔧 bulkEdit chunk:', { chunkStart: i, chunkEnd, numbersCount: numbers.length, firstNum: numbers[0], lastNum: numbers[numbers.length - 1] })
+      // console.log('🔧 SQL:', sql.split('\n')[0].trim(), '| bindings count:', bindings.length)
+
       const result: any = await db.connection('secondary').rawQuery(sql, bindings)
-      updated += Number(result[0]?.affectedRows ?? 0)
+      const affectedRows = Number(result[0]?.affectedRows ?? 0)
+      updated += affectedRows
+
+      // console.log('🔧 chunk result:', { affectedRows, totalUpdatedSoFar: updated })
     }
+
+    // console.log('🔧 bulkEdit completed:', { total, updated })
 
     return {
       total_requested: total,

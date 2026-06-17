@@ -3,6 +3,7 @@ import Group from '#models/group'
 import Unit from '#models/unit'
 import User from '#models/user';
 import db from '@adonisjs/lucid/services/db';
+import env from '#start/env'
 import TicketsService from '#services/tickets_service'
 
 type ListVendorsWithStatsInput = {
@@ -372,7 +373,7 @@ export default class VendorRangeService {
     input: CreateGroupAndAssignTicketsInput
   ): Promise<CreateGroupAndAssignTicketsResult> {
     try {
-      console.log('Creating group with input:', input)
+      // console.log('📍 Creating group with input:', input)
 
       // cria a paróquia (group)
       const group = await Group.create({
@@ -380,16 +381,16 @@ export default class VendorRangeService {
         unitId: input.unitId,
         managerId: input.managerId,
       })
-      console.log('Group created successfully:', group.id)
+      // console.log('✅ Group created successfully:', { groupId: group.id, groupName: group.name })
 
       // vincula as cartelas ao vendor + group
-      console.log('Starting bulk edit with params:', {
-        event: input.eventId,
-        from: input.ticketFrom,
-        to: input.ticketTo,
-        vendorId: input.managerId,
-        groupId: group.id,
-      })
+      // console.log('📍 Starting bulk edit with params:', {
+      //   event: input.eventId,
+      //   from: input.ticketFrom,
+      //   to: input.ticketTo,
+      //   vendorId: input.managerId,
+      //   groupId: group.id,
+      // })
 
       const bulkResult = await TicketsService.bulkEdit({
         event: input.eventId,
@@ -398,17 +399,27 @@ export default class VendorRangeService {
         vendorId: input.managerId,
         groupId: group.id,
       })
-      console.log('Bulk edit result:', bulkResult)
+
+      // console.log('✅ Bulk edit result:', {
+      //   success: bulkResult ? true : false,
+      //   total_requested: bulkResult.total_requested,
+      //   updated: bulkResult.updated,
+      //   patched_fields: bulkResult.patched_fields,
+      // })
+
+      // if (bulkResult.updated === 0) {
+      //   console.warn('⚠️  WARNING: bulkEdit updated 0 rows! Check if tickets exist in the database.')
+      // }
 
       return { success: true, group }
     } catch (error: any) {
-      console.error('Error in createGroupAndAssignTickets:', {
-        message: error?.message,
-        code: error?.code,
-        errno: error?.errno,
-        sql: error?.sql,
-        stack: error?.stack,
-      })
+      // console.error('❌ Error in createGroupAndAssignTickets:', {
+      //   message: error?.message,
+      //   code: error?.code,
+      //   errno: error?.errno,
+      //   sql: error?.sql,
+      //   stack: error?.stack,
+      // })
       // mantém a mesma semântica de erro que você tinha
       return {
         success: false,

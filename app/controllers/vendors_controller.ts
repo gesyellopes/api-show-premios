@@ -5,6 +5,7 @@ import NotificationService from '#services/notifications_service'
 //import GroupService from '#services/group_service'
 import type { HttpContext } from '@adonisjs/core/http'
 import Ticket from '#models/ticket'
+import env from '#start/env'
 
 export default class VendorsController {
   //Get vendors
@@ -51,7 +52,7 @@ export default class VendorsController {
 
       // ✅ Service: cria paróquia e atualiza range das cartelas
       const rangeResult = await VendorStatsService.createGroupAndAssignTickets({
-        eventId: 2,
+        eventId: env.get('DEFAULT_EVENT_ID') as number,
         unitId: Number(payload.unit_id),
         groupName: payload.group_name,
         managerId: user.id,
