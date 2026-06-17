@@ -3,7 +3,6 @@ import Group from '#models/group'
 import Unit from '#models/unit'
 import User from '#models/user';
 import db from '@adonisjs/lucid/services/db';
-import env from '#start/env'
 import TicketsService from '#services/tickets_service'
 
 type ListVendorsWithStatsInput = {
@@ -392,24 +391,13 @@ export default class VendorRangeService {
       //   groupId: group.id,
       // })
 
-      const bulkResult = await TicketsService.bulkEdit({
+      await TicketsService.bulkEdit({
         event: input.eventId,
         from: input.ticketFrom,
         to: input.ticketTo,
         vendorId: input.managerId,
         groupId: group.id,
       })
-
-      // console.log('✅ Bulk edit result:', {
-      //   success: bulkResult ? true : false,
-      //   total_requested: bulkResult.total_requested,
-      //   updated: bulkResult.updated,
-      //   patched_fields: bulkResult.patched_fields,
-      // })
-
-      // if (bulkResult.updated === 0) {
-      //   console.warn('⚠️  WARNING: bulkEdit updated 0 rows! Check if tickets exist in the database.')
-      // }
 
       return { success: true, group }
     } catch (error: any) {
