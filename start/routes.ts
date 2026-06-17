@@ -17,6 +17,7 @@ import router from '@adonisjs/core/services/router'
 import TenantsController from '#controllers/tenants_controller'
 import UsersController from '#controllers/users_controller'
 import TicketsController from '#controllers/tickets_controller'
+import TicketWhatsappMessagesController from '#controllers/ticket_whatsapp_messages_controller'
 import UnitsController from '#controllers/units_controller'
 import GroupsController from '#controllers/groups_controller'
 import VendorsController from '#controllers/vendors_controller'
@@ -114,6 +115,14 @@ router
     router.post('tickets/bulk/edit', [TicketsController, 'bulkEdit'])
 
     router.resource('tickets', TicketsController).apiOnly()
+
+    /**
+     * ------------------------------------------------------------------------
+     * TICKET WHATSAPP MESSAGES
+     * ------------------------------------------------------------------------
+     */
+    router.get('ticket-whatsapp-messages', [TicketWhatsappMessagesController, 'index'])
+    router.post('ticket-whatsapp-messages/manual-validate', [TicketWhatsappMessagesController, 'manualValidate'])
 
     /**
      * ------------------------------------------------------------------------
