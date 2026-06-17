@@ -30,11 +30,19 @@ export default class TicketWhatsappMessagesService {
     const query = TicketWhatsappMessage.query()
       .whereNot('status', 'VALIDATED')
 
-    if (senderNumber !== null) query.where('sender_number', 'like', `%${senderNumber}%`)
-    if (senderName !== null) query.where('sender_name', 'like', `%${senderName}%`)
+    if (senderNumber !== null) {
+      query.where('sender_number', 'like', `%${senderNumber as string}%`)
+    }
+    if (senderName !== null) {
+      query.where('sender_name', 'like', `%${senderName as string}%`)
+    }
     if (sentAt !== null) {
-      const startOfDay = DateTime.fromISO(sentAt).startOf('day').toSQL()
-      const endOfDay = DateTime.fromISO(sentAt).endOf('day').toSQL()
+      const startOfDay = DateTime.fromISO(sentAt as string)
+        .startOf('day')
+        .toSQL()
+      const endOfDay = DateTime.fromISO(sentAt as string)
+        .endOf('day')
+        .toSQL()
       query.whereBetween('sent_at', [startOfDay, endOfDay])
     }
 
@@ -42,11 +50,19 @@ export default class TicketWhatsappMessagesService {
     const countQuery = TicketWhatsappMessage.query()
       .whereNot('status', 'VALIDATED')
 
-    if (senderNumber !== null) countQuery.where('sender_number', 'like', `%${senderNumber}%`)
-    if (senderName !== null) countQuery.where('sender_name', 'like', `%${senderName}%`)
+    if (senderNumber !== null) {
+      countQuery.where('sender_number', 'like', `%${senderNumber as string}%`)
+    }
+    if (senderName !== null) {
+      countQuery.where('sender_name', 'like', `%${senderName as string}%`)
+    }
     if (sentAt !== null) {
-      const startOfDay = DateTime.fromISO(sentAt).startOf('day').toSQL()
-      const endOfDay = DateTime.fromISO(sentAt).endOf('day').toSQL()
+      const startOfDay = DateTime.fromISO(sentAt as string)
+        .startOf('day')
+        .toSQL()
+      const endOfDay = DateTime.fromISO(sentAt as string)
+        .endOf('day')
+        .toSQL()
       countQuery.whereBetween('sent_at', [startOfDay, endOfDay])
     }
 
