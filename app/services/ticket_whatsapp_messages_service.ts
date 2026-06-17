@@ -37,13 +37,9 @@ export default class TicketWhatsappMessagesService {
       query.where('sender_name', 'like', `%${senderName as string}%`)
     }
     if (sentAt !== null) {
-      const startOfDay = DateTime.fromISO(sentAt as string)
-        .startOf('day')
-        .toSQL()
-      const endOfDay = DateTime.fromISO(sentAt as string)
-        .endOf('day')
-        .toSQL()
-      query.whereBetween('sent_at', [startOfDay, endOfDay])
+      const startOfDay = DateTime.fromISO(sentAt as string).startOf('day')
+      const endOfDay = DateTime.fromISO(sentAt as string).endOf('day')
+      query.whereBetween('sent_at', [startOfDay.toJSDate(), endOfDay.toJSDate()])
     }
 
     // Conta total
@@ -57,13 +53,9 @@ export default class TicketWhatsappMessagesService {
       countQuery.where('sender_name', 'like', `%${senderName as string}%`)
     }
     if (sentAt !== null) {
-      const startOfDay = DateTime.fromISO(sentAt as string)
-        .startOf('day')
-        .toSQL()
-      const endOfDay = DateTime.fromISO(sentAt as string)
-        .endOf('day')
-        .toSQL()
-      countQuery.whereBetween('sent_at', [startOfDay, endOfDay])
+      const startOfDay = DateTime.fromISO(sentAt as string).startOf('day')
+      const endOfDay = DateTime.fromISO(sentAt as string).endOf('day')
+      countQuery.whereBetween('sent_at', [startOfDay.toJSDate(), endOfDay.toJSDate()])
     }
 
     const total = await countQuery.count('* as total').first()
