@@ -1,5 +1,5 @@
 import TicketWhatsappMessage from '#models/ticket_whatsapp_message'
-import Ticket from '#models/ticket'
+import TicketAuxiliarTable from '#models/ticket_auxiliar_table'
 import TicketAuxiliar from '#models/ticket_auxiliar'
 import WapiService from '#services/messages_service'
 import env from '#start/env'
@@ -30,9 +30,9 @@ export default class TicketWhatsappMessagesService {
     const query = TicketWhatsappMessage.query()
       .whereNot('status', 'VALIDATED')
 
-    if (senderNumber) query.where('sender_number', 'like', `%${senderNumber}%`)
-    if (senderName) query.where('sender_name', 'like', `%${senderName}%`)
-    if (sentAt) {
+    if (senderNumber !== null) query.where('sender_number', 'like', `%${senderNumber}%`)
+    if (senderName !== null) query.where('sender_name', 'like', `%${senderName}%`)
+    if (sentAt !== null) {
       const startOfDay = DateTime.fromISO(sentAt).startOf('day').toSQL()
       const endOfDay = DateTime.fromISO(sentAt).endOf('day').toSQL()
       query.whereBetween('sent_at', [startOfDay, endOfDay])
@@ -42,9 +42,9 @@ export default class TicketWhatsappMessagesService {
     const countQuery = TicketWhatsappMessage.query()
       .whereNot('status', 'VALIDATED')
 
-    if (senderNumber) countQuery.where('sender_number', 'like', `%${senderNumber}%`)
-    if (senderName) countQuery.where('sender_name', 'like', `%${senderName}%`)
-    if (sentAt) {
+    if (senderNumber !== null) countQuery.where('sender_number', 'like', `%${senderNumber}%`)
+    if (senderName !== null) countQuery.where('sender_name', 'like', `%${senderName}%`)
+    if (sentAt !== null) {
       const startOfDay = DateTime.fromISO(sentAt).startOf('day').toSQL()
       const endOfDay = DateTime.fromISO(sentAt).endOf('day').toSQL()
       countQuery.whereBetween('sent_at', [startOfDay, endOfDay])
@@ -104,7 +104,7 @@ export default class TicketWhatsappMessagesService {
 
     // 3. Buscar o ticket com prefixo
     const prefixedTicketNumber = `${ticketPrefix}${ticket_number}`
-    const ticket = await Ticket.query()
+    const ticket = await TicketAuxiliarTable.query()
       .where('ticket_number', prefixedTicketNumber)
       .first()
 
@@ -113,14 +113,14 @@ export default class TicketWhatsappMessagesService {
     }
 
     // Validar se já está validado
-    if (ticket.validated) {
+    if (ticket.status === 'VALIDATED') {
       throw new Error(`O ticket ${ticket_number} já está validado e não pode ser alterado manualmente`)
     }
 
     // 4. Atualizar o ticket
-    ticket.validated = true
-    ticket.validatedOn = DateTime.now()
-    ticket.ticketMirror = whatsappMessage.filename
+    ticket.status = 'VALIDATED'
+    ticket.messageId = message_id
+    ticket.validatedAt = DateTime.now()
     await ticket.save()
 
     // 5. Atualizar o ticket auxiliar (sem prefixo)
