@@ -1,6 +1,8 @@
 import Ticket from '#models/ticket'
+import TicketAuxiliarTable from '#models/ticket_auxiliar_table'
+import TicketWhatsappMessage from '#models/ticket_whatsapp_message'
 import { DateTime } from 'luxon'
-import logger from '@adonisjs/core/services/logger'
+import env from '#start/env'
 
 export default class TicketValidationService {
   /**
@@ -10,9 +12,7 @@ export default class TicketValidationService {
    * @param ticketMirror - Espelho do ticket
    */
   static async validateTicket(ticketNumber: string, validatedOn: DateTime, ticketMirror: string) {
-    const ticket = await Ticket.query()
-      .where('ticket_number', ticketNumber)
-      .first()
+    const ticket = await Ticket.query().where('ticket_number', ticketNumber).first()
 
     if (!ticket) {
       throw new Error('Ticket não encontrado')
@@ -40,9 +40,7 @@ export default class TicketValidationService {
    * @param ticketNumber - Número do ticket
    */
   static async invalidateTicket(ticketNumber: string) {
-    const ticket = await Ticket.query()
-      .where('ticket_number', ticketNumber)
-      .first()
+    const ticket = await Ticket.query().where('ticket_number', ticketNumber).first()
 
     if (!ticket) {
       throw new Error('Ticket não encontrado')
@@ -54,14 +52,25 @@ export default class TicketValidationService {
 
     await ticket.save()
 
-    try {
-      await this.callExternalInvalidateApi(ticketNumber)
-    } catch (error: any) {
-      logger.error(
-        { ticketNumber, error: error.message },
-        'Falha ao chamar API externa de invalidação'
-      )
+    const ticketPrefix = env.get('TICKET_PREFIX', 'AC')
+    const prefixedTicketNumber = `${ticketPrefix}${ticketNumber}`
+
+    // Atualizar ticket_auxiliar_table
+    const ticketAuxiliar = await TicketAuxiliarTable.query()
+      .where('ticket_number', prefixedTicketNumber)
+      .first()
+
+    if (ticketAuxiliar) {
+      ticketAuxiliar.status = 'WAITING_SALE'
+      ticketAuxiliar.messageId = ''
+      ticketAuxiliar.validatedAt = null
+      await ticketAuxiliar.save()
     }
+
+    // Atualizar todos os ticket_whatsapp_messages com esse ticket_number para REJECTED
+    await TicketWhatsappMessage.query().where('ticket_number', prefixedTicketNumber).update({
+      status: 'REJECTED',
+    })
 
     return {
       success: true,
@@ -71,23 +80,6 @@ export default class TicketValidationService {
         validated_on: null,
         ticket_mirror: null,
       },
-    }
-  }
-
-  private static async callExternalInvalidateApi(ticketNumber: string) {
-    const apiUrl = `https://api-v3.showdepremios.cloud/api/tickets/invalidate/${ticketNumber}`
-
-    const response = await fetch(apiUrl, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(
-        `API retornou status ${response.status}: ${response.statusText}`
-      )
     }
   }
 }

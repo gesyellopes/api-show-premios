@@ -29,6 +29,7 @@ export default class TicketWhatsappMessagesService {
 
     const query = TicketWhatsappMessage.query()
       .whereNot('status', 'VALIDATED')
+      .whereNot('status', 'REJECTED')
 
     if (senderNumber !== null) {
       query.where('sender_number', 'like', `%${senderNumber as string}%`)
@@ -45,6 +46,7 @@ export default class TicketWhatsappMessagesService {
     // Conta total
     const countQuery = TicketWhatsappMessage.query()
       .whereNot('status', 'VALIDATED')
+      .whereNot('status', 'REJECTED')
 
     if (senderNumber !== null) {
       countQuery.where('sender_number', 'like', `%${senderNumber as string}%`)
@@ -166,6 +168,31 @@ export default class TicketWhatsappMessagesService {
         prefixed_ticket_number: prefixedTicketNumber,
         status: 'MANUAL_VALIDATED',
         message_sent: true,
+      },
+    }
+  }
+
+  static async rejectMessage(message_id: string) {
+    if (!message_id) {
+      throw new Error('message_id é obrigatório')
+    }
+
+    const whatsappMessage = await TicketWhatsappMessage.query()
+      .where('message_id', message_id)
+      .first()
+
+    if (!whatsappMessage) {
+      throw new Error('Mensagem não encontrada')
+    }
+
+    whatsappMessage.status = 'REJECTED'
+    await whatsappMessage.save()
+
+    return {
+      success: true,
+      data: {
+        message_id,
+        status: 'REJECTED',
       },
     }
   }

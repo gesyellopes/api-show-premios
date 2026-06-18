@@ -123,6 +123,7 @@ router
      */
     router.get('ticket-whatsapp-messages', [TicketWhatsappMessagesController, 'index'])
     router.post('ticket-whatsapp-messages/manual-validate', [TicketWhatsappMessagesController, 'manualValidate'])
+    router.post('ticket-whatsapp-messages/reject', [TicketWhatsappMessagesController, 'reject'])
 
     /**
      * ------------------------------------------------------------------------

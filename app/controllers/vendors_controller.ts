@@ -140,7 +140,7 @@ export default class VendorsController {
     try {
       // ✅ Service: cria paróquia e atualiza range das cartelas
       const rangeResult = await VendorStatsService.createGroupAndAssignTickets({
-        eventId: 2,
+        eventId: env.get('DEFAULT_EVENT_ID') as number,
         unitId: Number(payload.unit_id),
         groupName: payload.group_name,
         managerId: params.id,

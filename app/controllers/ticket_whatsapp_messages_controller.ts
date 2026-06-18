@@ -34,4 +34,25 @@ export default class TicketWhatsappMessagesController {
       })
     }
   }
+
+  async reject({ request, response }: HttpContext) {
+    const messageId = request.input('message_id')
+
+    if (!messageId) {
+      return response.badRequest({
+        success: false,
+        message: 'message_id é obrigatório',
+      })
+    }
+
+    try {
+      const result = await TicketWhatsappMessagesService.rejectMessage(messageId)
+      return response.ok(result)
+    } catch (error: any) {
+      return response.badRequest({
+        success: false,
+        message: error.message,
+      })
+    }
+  }
 }
