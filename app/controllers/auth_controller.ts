@@ -6,7 +6,12 @@ import { DateTime } from 'luxon';
 import NotificationService from '#services/notifications_service';
 
 function normalizeWhatsapp(input: string) {
-    return (input || '').replace(/\D/g, '') // só dígitos
+    let normalized = (input || '').replace(/\D/g, '') // só dígitos
+    // Adiciona o código do país (55) se não tiver
+    if (!normalized.startsWith('55')) {
+        normalized = '55' + normalized
+    }
+    return normalized
 }
 
 function generateOtpCode() {
@@ -16,25 +21,51 @@ function generateOtpCode() {
 
 export default class AuthController {
 
-    async login({ request, auth }: HttpContext) {
-        const { whatsapp, password } = request.only(['whatsapp', 'password'])
-        const user = await User.verifyCredentials(whatsapp, password);
+    async login({ request, auth, response }: HttpContext) {
+        try {
+            const { whatsapp, password } = request.only(['whatsapp', 'password'])
+            const normalizedWhatsapp = normalizeWhatsapp(whatsapp)
 
-        const accessToken = await auth.use('api').createToken(user, ['*'], {
-            expiresIn: '15m'
-        })
+            // Find user by whatsapp
+            const user = await User.findBy('whatsapp', normalizedWhatsapp)
+            if (!user) {
+                // Debug: log the normalized whatsapp for troubleshooting
+                console.log(`User not found for whatsapp: ${normalizedWhatsapp}`)
+                return response.status(400).send({
+                    errors: [{ message: "Invalid user credentials" }]
+                })
+            }
 
-        const refreshToken = await auth.use('api').createToken(user, ["refresh"], {
-            expiresIn: '30d'
-        })
+            // Verify password
+            const passwordMatch = await hash.verify(user.password, password)
+            if (!passwordMatch) {
+                console.log(`Password mismatch for user: ${normalizedWhatsapp}`)
+                return response.status(400).send({
+                    errors: [{ message: "Invalid user credentials" }]
+                })
+            }
 
-        return {
-            user,
-            accessToken,
-            refreshToken,
+            const accessToken = await auth.use('api').createToken(user, ['*'], {
+                expiresIn: '15m'
+            })
+
+            const refreshToken = await auth.use('api').createToken(user, ["refresh"], {
+                expiresIn: '30d'
+            })
+
+            return {
+                user,
+                accessToken,
+                refreshToken,
+            }
+        } catch (err: any) {
+            console.error('Login error:', err)
+            return response.status(500).send({
+                errors: [{
+                    message: "Internal server error"
+                }]
+            })
         }
-
-
     }
 
     async destroy({ auth }: HttpContext) {

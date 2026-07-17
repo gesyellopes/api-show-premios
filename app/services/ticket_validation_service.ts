@@ -52,7 +52,7 @@ export default class TicketValidationService {
 
     await ticket.save()
 
-    const ticketPrefix = env.get('TICKET_PREFIX', 'AC')
+    const ticketPrefix = env.get('TICKET_PREFIX', 'AD')
     const prefixedTicketNumber = `${ticketPrefix}${ticketNumber}`
 
     // Atualizar ticket_auxiliar_table

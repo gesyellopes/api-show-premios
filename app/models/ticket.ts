@@ -3,7 +3,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 
 export default class Ticket extends BaseModel {
   static connection = 'secondary'
-  static table = 'tickets_pirapora'
+  static table = 'tickets_rodeio'
 
   @column({ isPrimary: true })
   declare id: number

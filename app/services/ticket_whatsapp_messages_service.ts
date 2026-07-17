@@ -93,7 +93,7 @@ export default class TicketWhatsappMessagesService {
 
   static async manualValidate(input: ManualValidateInput) {
     const { message_id, ticket_number } = input
-    const ticketPrefix = env.get('TICKET_PREFIX', 'AC')
+    const ticketPrefix = env.get('TICKET_PREFIX', 'AD')
 
     if (!message_id || !ticket_number) {
       throw new Error('message_id e ticket_number são obrigatórios')

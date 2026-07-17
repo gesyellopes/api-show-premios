@@ -46,6 +46,9 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   DEFAULT_EVENT_ID: Env.schema.number(),
 
+  //Imagem para cadastro do vendedor
+  VENDOR_HELP_GUID_IMAGE: Env.schema.string(),
+
   //REDIS
   // REDIS_URL: Env.schema.string()
 

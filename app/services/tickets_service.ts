@@ -132,7 +132,7 @@ export default class TicketsService {
       }
 
       const sql = `
-        UPDATE tickets_pirapora
+        UPDATE tickets_rodeio
         SET ${setClauses.join(', ')}
         WHERE event_id = ?
           AND ticket_number IN (${placeholders})
@@ -207,9 +207,9 @@ export default class TicketsService {
       const group = ticket.groupId ? await Group.find(ticket.groupId) : null
       const vendor = ticket.vendorId ? await User.find(ticket.vendorId) : null
 
-      // Busca o primeiro WhatsApp message validado (mais antigo) com prefixo AB
+      // Busca o primeiro WhatsApp message validado (mais antigo) com prefixo AD
       const whatsappMessage = await TicketWhatsappMessage.query()
-        .where('ticket_number', `AB${ticket.ticketNumber}`)
+        .where('ticket_number', `AD${ticket.ticketNumber}`)
         .where('status', 'VALIDATED')
         .orderBy('created_at', 'asc')
         .first()
@@ -578,7 +578,7 @@ export default class TicketsService {
     if (log) {
       table = 'ticket_logs'
     } else {
-      table = 'tickets_pirapora'
+      table = 'tickets_rodeio'
     }
 
     let query = log

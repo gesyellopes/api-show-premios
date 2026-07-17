@@ -33,7 +33,7 @@ export default class ReportsController {
 
     const rows = await db
       .connection('secondary')
-      .from('tickets_pirapora')
+      .from('tickets_rodeio')
       .select(db.raw('DATE(validated_on) as date'))
       .count('* as total')
       .whereNotNull('validated_on')

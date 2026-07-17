@@ -26,16 +26,16 @@ export default class VendorsController {
 
   //Create a vendor
   async store({ request }: HttpContext) {
-    const payload = request.only([
-      'unit_id',
-      'group_name',
-      'vendor_name',
-      'vendor_whatsapp',
-      'ticket_from',
-      'ticket_to',
-    ])
+    // 1. Defina um validador (recomendado) ou pegue o payload
+    const data = request.only(['vendor_name', 'vendor_whatsapp', 'ticket_from', 'ticket_to'])
 
-    payload.vendor_whatsapp = '55' + payload.vendor_whatsapp.replace(/\D/g, '')
+    // 2. Crie uma nova estrutura (spread operator) para adicionar campos extras
+    const payload = {
+      ...data,
+      vendor_whatsapp: '55' + data.vendor_whatsapp.replace(/\D/g, ''),
+      unit_id: '6',
+      group_name: 'Rodeio',
+    }
 
     const userPass = '123456' //Senha padrão
 
@@ -78,7 +78,7 @@ export default class VendorsController {
         ticketTo: payload.ticket_to,
         groupName: payload.group_name,
         unitId: Number(payload.unit_id),
-        imageUrl: 'https://files.showdepremios.cloud/show-premios-sao-sebastiao.jpeg',
+        imageUrl: env.get('VENDOR_HELP_GUID_IMAGE'),
       }).catch((error) => {
         console.error('Erro ao enviar notificação de vendedor criado:', error)
       })
@@ -135,7 +135,13 @@ export default class VendorsController {
 
   //Atualizar range vendedor
   async updateRange({ params, request }: HttpContext) {
-    const payload = request.only(['ticket_from', 'ticket_to', 'unit_id', 'group_name'])
+    const data = request.only(['ticket_from', 'ticket_to'])
+
+    const payload = {
+      ...data,
+      unit_id: 1,
+      group_name: 'Rodeio',
+    }
 
     try {
       // ✅ Service: cria paróquia e atualiza range das cartelas
