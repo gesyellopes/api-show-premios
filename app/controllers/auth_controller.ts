@@ -37,6 +37,12 @@ export default class AuthController {
             }
 
             // Verify password
+            if (!user.password) {
+                console.log(`User has no password set: ${normalizedWhatsapp}`)
+                return response.status(400).send({
+                    errors: [{ message: "Invalid user credentials" }]
+                })
+            }
             const passwordMatch = await hash.verify(user.password, password)
             if (!passwordMatch) {
                 console.log(`Password mismatch for user: ${normalizedWhatsapp}`)
