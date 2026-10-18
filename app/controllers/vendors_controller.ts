@@ -4,7 +4,7 @@ import VendorStatsService from '#services/vendor_stats_service'
 import NotificationService from '#services/notifications_service'
 //import GroupService from '#services/group_service'
 import type { HttpContext } from '@adonisjs/core/http'
-import Ticket from '#models/ticket'
+import TicketAuxiliar from '#models/ticket_auxiliar'
 import env from '#start/env'
 
 export default class VendorsController {
@@ -116,7 +116,7 @@ export default class VendorsController {
       await vendor.delete()
 
       //Remover vinculo do vendedor nas cartelas
-      await Ticket.query()
+      await TicketAuxiliar.query()
         .where('vendor_id', params.id)
         .update({ vendor_id: null, group_id: null, delivered_on: null })
 

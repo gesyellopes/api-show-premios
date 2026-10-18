@@ -1,4 +1,4 @@
-import Ticket from '#models/ticket'
+import TicketAuxiliar from '#models/ticket_auxiliar'
 import Group from '#models/group'
 import Unit from '#models/unit'
 import User from '#models/user';
@@ -110,7 +110,7 @@ export default class VendorRangeService {
     if (vendorIds.length > 0) {
       const totalRows = await db
         .connection('secondary')
-        .from('tickets_rodeio')
+        .from('tickets_pirapora2')
         .select('vendor_id')
         .count('* as total')
         .whereIn('vendor_id', vendorIds)
@@ -122,7 +122,7 @@ export default class VendorRangeService {
 
       const verifiedRows = await db
         .connection('secondary')
-        .from('tickets_rodeio')
+        .from('tickets_pirapora2')
         .select('vendor_id')
         .count('* as total')
         .whereIn('vendor_id', vendorIds)
@@ -185,14 +185,14 @@ export default class VendorRangeService {
       // tickets_total e tickets_verified (mesma lógica do index)
       const totalRow = await db
         .connection('secondary')
-        .from('tickets_rodeio')
+        .from('tickets_pirapora2')
         .where('vendor_id', vendor.id)
         .count('* as total')
         .first()
 
       const verifiedRow = await db
         .connection('secondary')
-        .from('tickets_rodeio')
+        .from('tickets_pirapora2')
         .where('vendor_id', vendor.id)
         .where('validated', 1)
         .count('* as total')
@@ -239,7 +239,7 @@ export default class VendorRangeService {
   
   static async getRange(input: GetRangeInput): Promise<GetRangeResult> {
     try {
-      const tickets = await Ticket.query()
+      const tickets = await TicketAuxiliar.query()
         .select(['ticket_number', 'group_id'])
         .where('vendor_id', input.vendorId)
 
@@ -420,7 +420,7 @@ export default class VendorRangeService {
 
   //Tickets de um vendedor
   static async listTicketsOfVendor(vendorId: number): Promise<any[]> {
-    const tickets = await Ticket.query()
+    const tickets = await TicketAuxiliar.query()
       .where('vendor_id', vendorId)
       .orderBy('ticket_number', 'asc')
 
