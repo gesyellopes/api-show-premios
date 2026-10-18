@@ -1,5 +1,6 @@
 // app/services/tickets_service.ts
 import Ticket from '#models/ticket'
+import TicketAuxiliar from '#models/ticket_auxiliar'
 import TicketWhatsappMessage from '#models/ticket_whatsapp_message'
 import db from '@adonisjs/lucid/services/db'
 import Group from '#models/group'
@@ -132,7 +133,7 @@ export default class TicketsService {
       }
 
       const sql = `
-        UPDATE tickets_rodeio
+        UPDATE tickets_pirapora2
         SET ${setClauses.join(', ')}
         WHERE event_id = ?
           AND ticket_number IN (${placeholders})
@@ -176,7 +177,7 @@ export default class TicketsService {
 
     //const paid = input.paid ?? null
 
-    const query = Ticket.query()
+    const query = TicketAuxiliar.query()
 
     if (vendorName || vendorWhatsapp) {
       //Preciso buscar os IDs dos vendors que batem com o filtro
@@ -207,9 +208,9 @@ export default class TicketsService {
       const group = ticket.groupId ? await Group.find(ticket.groupId) : null
       const vendor = ticket.vendorId ? await User.find(ticket.vendorId) : null
 
-      // Busca o primeiro WhatsApp message validado (mais antigo) com prefixo AD
+      // Busca o primeiro WhatsApp message validado (mais antigo) com prefixo AF
       const whatsappMessage = await TicketWhatsappMessage.query()
-        .where('ticket_number', `AD${ticket.ticketNumber}`)
+        .where('ticket_number', `AF${ticket.ticketNumber}`)
         .where('status', 'VALIDATED')
         .orderBy('created_at', 'asc')
         .first()
@@ -578,7 +579,7 @@ export default class TicketsService {
     if (log) {
       table = 'ticket_logs'
     } else {
-      table = 'tickets_rodeio'
+      table = 'tickets_pirapora2'
     }
 
     let query = log

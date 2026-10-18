@@ -1,5 +1,5 @@
 // import type { HttpContext } from '@adonisjs/core/http'
-import Ticket from '#models/ticket'
+import TicketAuxiliar from '#models/ticket_auxiliar'
 import User from '#models/user'
 import Unit from '#models/unit'
 import Group from '#models/group'
@@ -13,9 +13,9 @@ export default class ReportsController {
       .where('role', 'vendor')
       .count('* as total')
 
-    const [{ $extras: ticketsExtras }] = await Ticket.query().count('* as total')
+    const [{ $extras: ticketsExtras }] = await TicketAuxiliar.query().count('* as total')
 
-    const [{ $extras: validatedExtras }] = await Ticket.query()
+    const [{ $extras: validatedExtras }] = await TicketAuxiliar.query()
       .whereNotNull('validated_on')
       .count('* as total')
 
@@ -33,7 +33,7 @@ export default class ReportsController {
 
     const rows = await db
       .connection('secondary')
-      .from('tickets_rodeio')
+      .from('tickets_pirapora2')
       .select(db.raw('DATE(validated_on) as date'))
       .count('* as total')
       .whereNotNull('validated_on')
@@ -172,7 +172,7 @@ Exemplo de retorno:
 
     if (groupIds.length > 0) {
       const groupTotalRows = await db
-        .from('tickets')
+        .from('tickets_pirapora2')
         .select('group_id')
         .count('* as total')
         .whereIn('group_id', groupIds)
@@ -183,7 +183,7 @@ Exemplo de retorno:
       }
 
       const groupValidatedRows = await db
-        .from('tickets')
+        .from('tickets_pirapora2')
         .select('group_id')
         .count('* as total')
         .whereIn('group_id', groupIds)

@@ -3,13 +3,31 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 
 export default class TicketAuxiliar extends BaseModel {
   static connection = 'secondary'
-  static table = 'tickets_rodeio'
+  static table = 'tickets_pirapora2'
 
   @column({ isPrimary: true })
   declare id: number
 
   @column({ columnName: 'ticket_number' })
   declare ticketNumber: string
+
+  @column({ columnName: 'event_id' })
+  declare eventId: number | null
+
+  @column({ columnName: 'organization_id' })
+  declare organizationId: number | null
+
+  @column({ columnName: 'unit_id' })
+  declare unitId: number | null
+
+  @column({ columnName: 'group_id' })
+  declare groupId: number | null
+
+  @column({ columnName: 'vendor_id' })
+  declare vendorId: number | null
+
+  @column.dateTime({ columnName: 'delivered_on' })
+  declare deliveredOn: DateTime | null
 
   @column({ columnName: 'message_id' })
   declare messageId: string | null

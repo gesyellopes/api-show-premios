@@ -52,4 +52,17 @@ export default await Env.create(new URL('../', import.meta.url), {
   //REDIS
   // REDIS_URL: Env.schema.string()
 
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the drive package (S3 / Garage)
+  |----------------------------------------------------------
+  */
+  DRIVE_DISK_DEFAULT: Env.schema.string(),
+  S3_KEY: Env.schema.string(),
+  S3_SECRET: Env.schema.string(),
+  S3_REGION: Env.schema.string(),
+  S3_BUCKET_PUBLIC: Env.schema.string(),
+  S3_BUCKET_PRIVATE: Env.schema.string(),
+  S3_ENDPOINT: Env.schema.string(),
+  S3_PUBLIC_ENDPOINT: Env.schema.string(),
 })

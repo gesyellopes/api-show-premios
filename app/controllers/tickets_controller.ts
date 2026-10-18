@@ -6,6 +6,10 @@ import TicketsService from '#services/tickets_service'
 import TicketValidationService from '#services/ticket_validation_service'
 import fs from 'node:fs/promises'
 
+// Número do ticket sempre tem 6 dígitos (000001 a 999999)
+const TICKET_DIGITS = 6
+const MAX_TICKET_NUMBER = 999999
+
 function padLeft(n: number, width: number) {
   return String(n).padStart(width, '0')
 }
@@ -13,11 +17,15 @@ function padLeft(n: number, width: number) {
 function parseRange(from: string, to: string) {
   if (!from || !to) throw new Error('from e to são obrigatórios')
 
+  if (from.length !== TICKET_DIGITS || to.length !== TICKET_DIGITS) {
+    throw new Error(`from e to precisam ter exatamente ${TICKET_DIGITS} dígitos`)
+  }
+
   if (from.length !== to.length) {
     throw new Error('from e to precisam ter o MESMO tamanho (mesma quantidade de dígitos)')
   }
 
-  const width = from.length
+  const width = TICKET_DIGITS
   const start = Number(from)
   const end = Number(to)
 
@@ -309,6 +317,82 @@ export default class TicketsController {
         organization_id: Number(organizationId),
         from: String(from),
         to: String(to),
+      },
+    }
+  }
+
+  /**
+   * POST /tickets/auxiliar/bulk/create
+   * body: { event_id, organization_id, quantity }
+   * Gera tickets de 1 até quantity na tabela auxiliar (tickets_pirapora2), com delivered_on = agora.
+   */
+  public async bulkCreateAuxiliar({ request, response }: HttpContext) {
+    const isPositiveInt = (v: unknown) => Number.isInteger(Number(v)) && Number(v) > 0
+
+    const eventId = request.input('event_id')
+    const organizationId = request.input('organization_id')
+    const quantity = request.input('quantity')
+
+    if (!isPositiveInt(eventId) || !isPositiveInt(organizationId) || !isPositiveInt(quantity)) {
+      return response.badRequest({
+        success: false,
+        message: 'event_id, organization_id e quantity são obrigatórios (inteiros maiores que 0)',
+      })
+    }
+
+    const total = Number(quantity)
+
+    if (total > MAX_TICKET_NUMBER) {
+      return response.badRequest({
+        success: false,
+        message: `quantity não pode ser maior que ${MAX_TICKET_NUMBER}`,
+      })
+    }
+
+    // Sempre 6 dígitos (000001)
+    const width = TICKET_DIGITS
+    const CHUNK = 2000
+
+    let created = 0
+    let skipped = 0
+
+    // Tudo ou nada: se um chunk falhar, nenhum ticket fica gravado
+    await db.connection('secondary').transaction(async (trx) => {
+      for (let i = 1; i <= total; i += CHUNK) {
+        const chunkEnd = Math.min(i + CHUNK - 1, total)
+
+        const numbers: number[] = []
+        for (let n = i; n <= chunkEnd; n++) numbers.push(n)
+
+        const placeholders = numbers.map(() => '(?, ?, ?, NOW(), NOW(), NOW())').join(',')
+        const bindings = numbers.flatMap((n) => [padLeft(n, width), Number(eventId), Number(organizationId)])
+
+        /**
+         * INSERT IGNORE só descarta duplicados se existir UNIQUE em (event_id, ticket_number)
+         * ou em ticket_number na tabela. Sem índice, os duplicados são inseridos.
+         */
+        const result: any = await trx.rawQuery(
+          `INSERT IGNORE INTO tickets_pirapora2 (ticket_number, event_id, organization_id, delivered_on, created_at, updated_at)
+           VALUES ${placeholders}`,
+          bindings
+        )
+
+        const affected = Number(result[0]?.affectedRows ?? 0)
+        created += affected
+        skipped += numbers.length - affected
+      }
+    })
+
+    return {
+      success: true,
+      data: {
+        total_requested: total,
+        created,
+        skipped,
+        event_id: Number(eventId),
+        organization_id: Number(organizationId),
+        from: padLeft(1, width),
+        to: padLeft(total, width),
       },
     }
   }

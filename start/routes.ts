@@ -25,6 +25,7 @@ import ReportsController from '#controllers/reports_controller'
 import NotificationsController from '#controllers/notifications_controller'
 import AuthController from '#controllers/auth_controller'
 import WhatsappAllowedNumbersController from '#controllers/whatsapp_allowed_numbers_controller'
+import UploadsController from '#controllers/uploads_controller'
 
 /**
  * ============================================================================
@@ -50,6 +51,7 @@ import RaffleRoundsController from '#controllers/raffle_rounds_controller'
  */
 router
   .group(() => {
+    router.post('uploads', [UploadsController, 'store'])
     /**
      * ------------------------------------------------------------------------
      * AUTH (public)
@@ -113,6 +115,7 @@ router
     router.post('tickets/return', [TicketsController, 'returnTickets'])
     router.post('tickets/bulk/create', [TicketsController, 'bulkCreate'])
     router.post('tickets/bulk/edit', [TicketsController, 'bulkEdit'])
+    router.post('tickets/auxiliar/bulk/create', [TicketsController, 'bulkCreateAuxiliar'])
 
     router.resource('tickets', TicketsController).apiOnly()
 
@@ -184,6 +187,10 @@ router
     router.get('auth/me', [AuthController, 'me'])
     router.post('auth/logout', [AuthController, 'destroy'])
     router.post('auth/refresh', [AuthController, 'refresh'])
+
+    /**
+     * UPLOADS (imagens para o storage)
+     */
   })
   .prefix('/api/v1')
   .use(middleware.auth())
