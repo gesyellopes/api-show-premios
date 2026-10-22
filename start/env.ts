@@ -46,6 +46,9 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   DEFAULT_EVENT_ID: Env.schema.number(),
 
+  //Tabela dos tickets usados nas consultas e sorteios
+  TICKETS_AUXILIAR_TABLE: Env.schema.string(),
+
   //Imagem para cadastro do vendedor
   VENDOR_HELP_GUID_IMAGE: Env.schema.string(),
 

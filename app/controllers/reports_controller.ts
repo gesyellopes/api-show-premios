@@ -5,6 +5,7 @@ import Unit from '#models/unit'
 import Group from '#models/group'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
+import env from '#start/env'
 
 export default class ReportsController {
   // Indicadores básicos sobre as cartelas
@@ -33,7 +34,7 @@ export default class ReportsController {
 
     const rows = await db
       .connection('secondary')
-      .from('tickets_pirapora2')
+      .from(env.get('TICKETS_AUXILIAR_TABLE'))
       .select(db.raw('DATE(validated_on) as date'))
       .count('* as total')
       .whereNotNull('validated_on')
@@ -172,7 +173,7 @@ Exemplo de retorno:
 
     if (groupIds.length > 0) {
       const groupTotalRows = await db
-        .from('tickets_pirapora2')
+        .from(env.get('TICKETS_AUXILIAR_TABLE'))
         .select('group_id')
         .count('* as total')
         .whereIn('group_id', groupIds)
@@ -183,7 +184,7 @@ Exemplo de retorno:
       }
 
       const groupValidatedRows = await db
-        .from('tickets_pirapora2')
+        .from(env.get('TICKETS_AUXILIAR_TABLE'))
         .select('group_id')
         .count('* as total')
         .whereIn('group_id', groupIds)

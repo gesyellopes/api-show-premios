@@ -4,6 +4,7 @@ import Unit from '#models/unit'
 import User from '#models/user';
 import db from '@adonisjs/lucid/services/db';
 import TicketsService from '#services/tickets_service'
+import env from '#start/env'
 
 type ListVendorsWithStatsInput = {
   page?: number
@@ -110,7 +111,7 @@ export default class VendorRangeService {
     if (vendorIds.length > 0) {
       const totalRows = await db
         .connection('secondary')
-        .from('tickets_pirapora2')
+        .from(env.get('TICKETS_AUXILIAR_TABLE'))
         .select('vendor_id')
         .count('* as total')
         .whereIn('vendor_id', vendorIds)
@@ -122,7 +123,7 @@ export default class VendorRangeService {
 
       const verifiedRows = await db
         .connection('secondary')
-        .from('tickets_pirapora2')
+        .from(env.get('TICKETS_AUXILIAR_TABLE'))
         .select('vendor_id')
         .count('* as total')
         .whereIn('vendor_id', vendorIds)
@@ -185,14 +186,14 @@ export default class VendorRangeService {
       // tickets_total e tickets_verified (mesma lógica do index)
       const totalRow = await db
         .connection('secondary')
-        .from('tickets_pirapora2')
+        .from(env.get('TICKETS_AUXILIAR_TABLE'))
         .where('vendor_id', vendor.id)
         .count('* as total')
         .first()
 
       const verifiedRow = await db
         .connection('secondary')
-        .from('tickets_pirapora2')
+        .from(env.get('TICKETS_AUXILIAR_TABLE'))
         .where('vendor_id', vendor.id)
         .where('validated', 1)
         .count('* as total')

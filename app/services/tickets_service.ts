@@ -9,6 +9,7 @@ import User from '#models/user'
 import TicketLog from '#models/ticket_log'
 import TicketReturn from '#models/ticket_return'
 import { DateTime } from 'luxon'
+import env from '#start/env'
 
 type BulkEditParams = {
   event: number | string
@@ -133,7 +134,7 @@ export default class TicketsService {
       }
 
       const sql = `
-        UPDATE tickets_pirapora2
+        UPDATE ${env.get('TICKETS_AUXILIAR_TABLE')}
         SET ${setClauses.join(', ')}
         WHERE event_id = ?
           AND ticket_number IN (${placeholders})
@@ -579,7 +580,7 @@ export default class TicketsService {
     if (log) {
       table = 'ticket_logs'
     } else {
-      table = 'tickets_pirapora2'
+      table = env.get('TICKETS_AUXILIAR_TABLE')
     }
 
     let query = log

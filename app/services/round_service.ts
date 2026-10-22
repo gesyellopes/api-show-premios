@@ -3,8 +3,9 @@
 import RaffleRound from '#models/raffle_round'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
+import env from '#start/env'
 
-// event_id dos tickets (tickets_pirapora2) usados nos sorteios
+// event_id dos tickets (TICKETS_AUXILIAR_TABLE) usados nos sorteios
 const TICKETS_EVENT_ID = 3
 
 type StartParams = {
@@ -49,7 +50,7 @@ export default class RoundService {
     const allTicketsResult: any = await db.connection('secondary').rawQuery(
       `
           SELECT ticket_number
-          FROM tickets_pirapora2
+          FROM ${env.get('TICKETS_AUXILIAR_TABLE')}
           WHERE event_id = ?
           ORDER BY ticket_number ASC
         `,
@@ -114,7 +115,7 @@ export default class RoundService {
     const validatedTicketsResult: any = await db.connection('secondary').rawQuery(
       `
             SELECT id, ticket_number
-            FROM tickets_pirapora2
+            FROM ${env.get('TICKETS_AUXILIAR_TABLE')}
             WHERE validated = 1
               AND event_id = ?
         `,

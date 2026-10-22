@@ -1,9 +1,10 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
+import env from '#start/env'
 
 export default class TicketAuxiliar extends BaseModel {
   static connection = 'secondary'
-  static table = 'tickets_pirapora2'
+  static table = env.get('TICKETS_AUXILIAR_TABLE')
 
   @column({ isPrimary: true })
   declare id: number

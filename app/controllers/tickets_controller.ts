@@ -324,7 +324,7 @@ export default class TicketsController {
   /**
    * POST /tickets/auxiliar/bulk/create
    * body: { event_id, organization_id, quantity }
-   * Gera tickets de 1 até quantity na tabela auxiliar (tickets_pirapora2), com delivered_on = agora.
+   * Gera tickets de 1 até quantity na tabela auxiliar (tickets_vzp), com delivered_on = agora.
    */
   public async bulkCreateAuxiliar({ request, response }: HttpContext) {
     const isPositiveInt = (v: unknown) => Number.isInteger(Number(v)) && Number(v) > 0
@@ -372,7 +372,7 @@ export default class TicketsController {
          * ou em ticket_number na tabela. Sem índice, os duplicados são inseridos.
          */
         const result: any = await trx.rawQuery(
-          `INSERT IGNORE INTO tickets_pirapora2 (ticket_number, event_id, organization_id, delivered_on, created_at, updated_at)
+          `INSERT IGNORE INTO tickets_vzp (ticket_number, event_id, organization_id, delivered_on, created_at, updated_at)
            VALUES ${placeholders}`,
           bindings
         )
