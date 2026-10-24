@@ -209,9 +209,10 @@ export default class TicketsService {
       const group = ticket.groupId ? await Group.find(ticket.groupId) : null
       const vendor = ticket.vendorId ? await User.find(ticket.vendorId) : null
 
-      // Busca o primeiro WhatsApp message validado (mais antigo) com prefixo AF
+      // Busca o primeiro WhatsApp message validado (mais antigo) com o prefixo do env
+      const ticketPrefix = env.get('TICKET_PREFIX', 'AD')
       const whatsappMessage = await TicketWhatsappMessage.query()
-        .where('ticket_number', `AF${ticket.ticketNumber}`)
+        .where('ticket_number', `${ticketPrefix}${ticket.ticketNumber}`)
         .where('status', 'VALIDATED')
         .orderBy('created_at', 'asc')
         .first()
