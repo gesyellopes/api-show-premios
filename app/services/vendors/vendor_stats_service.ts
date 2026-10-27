@@ -3,7 +3,7 @@ import Group from '#models/group'
 import Unit from '#models/unit'
 import User from '#models/user';
 import db from '@adonisjs/lucid/services/db';
-import TicketsService from '#services/tickets_service'
+import TicketsService from '#services/tickets/tickets_service'
 import env from '#start/env'
 
 type ListVendorsWithStatsInput = {

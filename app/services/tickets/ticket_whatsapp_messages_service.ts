@@ -1,7 +1,7 @@
 import TicketWhatsappMessage from '#models/ticket_whatsapp_message'
 import TicketAuxiliarTable from '#models/ticket_auxiliar_table'
 import TicketAuxiliar from '#models/ticket_auxiliar'
-import WapiService from '#services/messages_service'
+import WapiService from '#services/messaging/messages_service'
 import env from '#start/env'
 import { DateTime } from 'luxon'
 

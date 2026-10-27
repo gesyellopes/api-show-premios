@@ -2,8 +2,8 @@ import db from '@adonisjs/lucid/services/db'
 import Ticket from '#models/ticket'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
-import TicketsService from '#services/tickets_service'
-import TicketValidationService from '#services/ticket_validation_service'
+import TicketsService from '#services/tickets/tickets_service'
+import TicketValidationService from '#services/tickets/ticket_validation_service'
 import fs from 'node:fs/promises'
 
 // Número do ticket sempre tem 6 dígitos (000001 a 999999)

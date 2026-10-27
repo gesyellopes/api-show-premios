@@ -60,7 +60,6 @@ export default class TicketsService {
     return s.length >= width ? s : '0'.repeat(width - s.length) + s
   }
 
-
   /**
    * Exemplo de parseRange esperado:
    * - retorna { start, end, width }
@@ -173,7 +172,10 @@ export default class TicketsService {
     const groupId = input.groupId ?? null
     const vendorName = input.vendorName ?? null
     const vendorWhatsapp = input.vendorWhatsapp ?? null
-    const validated = Number(input.validated) ?? null
+    const validated =
+      input.validated !== undefined && input.validated !== null && input.validated !== ''
+        ? Number(input.validated)
+        : null
     const ticketNumber = input.ticketNumber ?? null
 
     //const paid = input.paid ?? null
@@ -194,8 +196,14 @@ export default class TicketsService {
     if (unitId) query.where('unit_id', unitId)
     if (groupId) query.where('group_id', groupId)
     if (validated !== null) {
-      if (validated === 1) query.where('validated', true)
-      else if (validated === 0) query.where('validated', false)
+      if (validated === 1) {
+        query.where('validated', true)
+      } else if (validated === 0) {
+        // Busca registros onde validated é false (0) OU é NULL
+        query.where((builder) => {
+          builder.where('validated', false).orWhereNull('validated')
+        })
+      }
     }
     if (ticketNumber) query.where('ticket_number', ticketNumber)
 

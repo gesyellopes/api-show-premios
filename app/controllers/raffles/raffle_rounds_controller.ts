@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import RaffleRound, { type RaffleRoundStatus } from '#models/raffle_round'
-import RoundService from '#services/round_service'
+import RoundService from '#services/raffles/round_service'
 
 //const DEFAULT_TENANT_ID = 1 // por enquanto (não usado diretamente aqui)
 

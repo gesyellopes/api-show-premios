@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import TicketWhatsappMessagesService from '#services/ticket_whatsapp_messages_service'
+import TicketWhatsappMessagesService from '#services/tickets/ticket_whatsapp_messages_service'
 
 export default class TicketWhatsappMessagesController {
   async index({ request }: HttpContext) {

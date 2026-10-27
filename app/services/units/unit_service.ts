@@ -1,7 +1,7 @@
 import Unit from "#models/unit";
-import TicketsService from "./tickets_service.js";
+import TicketsService from "../tickets/tickets_service.js";
 import Group from "#models/group";
-import UserService from "./user_service.js";
+import UserService from "../users/user_service.js";
 
 /*
 type listUnits = {

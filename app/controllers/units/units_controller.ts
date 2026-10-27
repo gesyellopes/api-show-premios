@@ -1,5 +1,5 @@
 import Unit from '#models/unit'
-import UnitService from '#services/unit_service'
+import UnitService from '#services/units/unit_service'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class UnitsController {

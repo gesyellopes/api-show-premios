@@ -1,7 +1,7 @@
 import Unit from '#models/unit'
 import User from '#models/user'
-import WapiService from '#services/messages_service'
-import VendorStatsService from './vendor_stats_service.js'
+import WapiService from '#services/messaging/messages_service'
+import VendorStatsService from '../vendors/vendor_stats_service.js'
 
 type VendorCreatedInput = {
   vendorName: string
